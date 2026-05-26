@@ -1419,7 +1419,7 @@ fun HabitCard(
             // Expanded Habit loop showing the Charles Duhigg formula
             val expandTransition = updateTransition(targetState = expanded, label = "expand")
             val contentAlpha by expandTransition.animateFloat(label = "alpha") { if (it) 1f else 0f }
-            val contentHeight by expandTransition.animateDp(label = "height") { if (it) 136.dp else 0.dp }
+            val contentHeight by expandTransition.animateDp(label = "height") { if (it) 164.dp else 0.dp }
 
             if (expanded || contentHeight > 0.dp) {
                 Column(
@@ -1458,7 +1458,9 @@ fun HabitCard(
 
                     Spacer(modifier = Modifier.weight(1f))
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -1466,36 +1468,78 @@ fun HabitCard(
                             Text(
                                 text = "⚠️ Non-applicable date: filtered",
                                 fontSize = 11.sp,
+                                modifier = Modifier.weight(1f),
                                 color = MaterialTheme.colorScheme.error
                             )
                         } else {
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.weight(1f))
                         }
 
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            IconButton(
+                            // Edit Button (Primary-colored, outline styling for prominence)
+                            OutlinedButton(
                                 onClick = onEdit,
-                                modifier = Modifier.size(24.dp)
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.primary
+                                ),
+                                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                modifier = Modifier.height(36.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
                                     contentDescription = "Edit Habit Description",
-                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = when (selectedLanguage) {
+                                        AppLanguage.SPANISH -> "Editar"
+                                        AppLanguage.HINDI -> "संपादित करें"
+                                        AppLanguage.GERMAN -> "Bearbeiten"
+                                        AppLanguage.JAPANESE -> "編集"
+                                        AppLanguage.PORTUGUESE -> "Editar"
+                                        else -> "Edit"
+                                    },
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp
                                 )
                             }
-                            IconButton(
+
+                            // Delete Button (Critical red error outline style)
+                            OutlinedButton(
                                 onClick = onDelete,
-                                modifier = Modifier.size(24.dp)
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.error
+                                ),
+                                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.8f)),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                modifier = Modifier.height(36.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = "Delete Habit",
-                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = when (selectedLanguage) {
+                                        AppLanguage.SPANISH -> "Eliminar"
+                                        AppLanguage.HINDI -> "हटाएं"
+                                        AppLanguage.GERMAN -> "Löschen"
+                                        AppLanguage.JAPANESE -> "削除"
+                                        AppLanguage.PORTUGUESE -> "Excluir"
+                                        else -> "Delete"
+                                    },
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp
                                 )
                             }
                         }
@@ -3433,40 +3477,160 @@ data class LifeAreaDoc(
 private fun getFaqItems(language: AppLanguage): List<FaqItem> {
     return when (language) {
         AppLanguage.SPANISH -> listOf(
-            FaqItem("¿Cómo entiendo esta aplicación?", "AuraByte se basa en el bucle de hábitos de Charles Duhigg: Señal ➔ Rutina ➔ Recompensa. Al definir un disparador ambiental (ej: 'sentarme al escritorio'), automatizas una acción positiva ('escribir 100 palabras'), reforzada por un premio inmediato ('té caliente') para reconfigurar tu cerebro.", "💡", Color(0xFF1565C0)),
-            FaqItem("¿Cómo construyo un hábito permanente?", "La permanencia proviene de conectar tu Señal con rutinas diarias consistentes y Recompensas inmediatas. ¡Empieza de forma muy pequeña, prioriza la constancia y usa nuestro registro automático de frecuencias (Diario, Fin de semana, Fin de semana, Mensual) para calentar tu racha ('Heatwave')!", "🔥", Color(0xFFEF6C00)),
-            FaqItem("¿Cómo ayuda esta aplicación a que mi vida sea valiosa?", "Vivir de forma valiosa requiere equilibrio. AuraByte rastrea 4 áreas clave (Salud, Profesional, Personal, Social). El panel de control en tiempo real mide tu equilibrio diario, evitando el agotamiento al tiempo que fomenta tu bienestar físico, crecimiento profesional, sabiduría interna y conexiones sociales.", "⚖️", Color(0xFFE91E63)),
-            FaqItem("¿Quién construyó esta aplicación? (Historia de Ankit)", "AuraByte fue creado por el desarrollador Ankit Sudegora en colaboración con Gemini. 'Busqué un rastreador de hábitos libre de anuncios que siguiera la psicología de Duhigg durante mucho tiempo. Al no encontrar nada satisfactorio, construí este espacio de trabajo limpio, estético y fuera de línea. ¡Desarrollado con ♥️!'", "👨‍💻", Color(0xFF2E7D32))
+            FaqItem(
+                "¿Cuál es la ciencia detrás de esta app?", 
+                "AuraByte se basa en un truco psicológico simple: el bucle de hábitos de Señal ➔ Rutina ➔ Recompensa. En lugar de proponerte metas vagas como 'cocinar más', vinculas un disparador ('Cuando entre a la cocina a las 7 PM') con una acción diminuta ('Cortaré una verdura') seguido de un premio inmediato. Así reconfiguras tu cerebro usando el camino de menor resistencia.", 
+                "💡", 
+                Color(0xFF1565C0)
+            ),
+            FaqItem(
+                "¿Cómo construyo un hábito que realmente dure?", 
+                "El secreto es empezar de forma ridículamente pequeña y anclarlo a cosas que ya haces sin pensar (como lavarte los dientes o abrir tu laptop). Concéntrate únicamente en cumplir cada día. Usa nuestro registro flexible de frecuencias (Diario, Días hábiles, Fines de semana) para calentar tu racha ('Heatwave') sin agotarte.", 
+                "🔥", 
+                Color(0xFFEF6C00)
+            ),
+            FaqItem(
+                "¿Por qué dividir mi vida en 4 cuadrantes?", 
+                "Porque darlo todo en el trabajo no sirve de nada si tu salud o tus relaciones se están cayendo a pedazos. AuraByte te obliga a registrar tu progreso diario en cuatro pilares básicos: Salud, Profesional, Personal y Familia. Es un golpe de realidad diseñado para mantenerte enfocado y en equilibrio.", 
+                "⚖️", 
+                Color(0xFFE91E63)
+            ),
+            FaqItem(
+                "¿Quién construyó esto? (La historia de Ankit)", 
+                "Hola, soy Ankit. Pasé años buscando un rastreador de hábitos en modo oscuro que fuera limpio, sin anuncios, privado y basado en psicología real. Todo lo que encontraba estaba lleno de funciones inútiles o bloqueado tras una suscripción. Así que me alié con Gemini y construí AuraByte yo mismo. Un espacio de trabajo offline y sin distracciones, hecho con ♥️ para desarrolladores que quieren pasar a la acción.", 
+                "👨‍💻", 
+                Color(0xFF2E7D32)
+            )
         )
         AppLanguage.HINDI -> listOf(
-            FaqItem("मैं इस एप्लीकेशन को कैसे समझूँ?", "AuraByte चार्ल्स डुहिंग के मनोवैज्ञानिक आदत लूप (संकेत ➔ आदत ➔ पुरस्कार) पर आधारित है। अपने दैनिक जीवन के किसी संकेत (जैसे: 'डेस्क पर बैठना') को जोड़कर आप एक सकारात्मक कार्य ('100 शब्द लिखना') को स्वचालित करते हैं, और इसे एक छोटे पुरस्कार ('गर्म चाय') से मजबूत करते हैं।", "💡", Color(0xFF1565C0)),
-            FaqItem("मैं ऐसी आदत कैसे बनाऊँ जो हमेशा टिकी रहे?", "स्थायित्व आपके संकेत (Trigger) को वर्तमान की आदतों और त्वरित पुरस्कारों से जोड़ने से आता है। बहुत छोटी शुरुआत करें, निरंतरता पर ध्यान दें, और लगातार स्ट्रीक ('Heatwave') बनाए रखने के लिए हमारे स्वचालित शेड्यूल का उपयोग करें!", "🔥", Color(0xFFEF6C00)),
-            FaqItem("यह ऐप मेरे जीवन को मूल्यवान बनाने में कैसे मदद कर सकता है?", "मूल्यवान जीवन संतुलन से आता है। AuraByte 4 प्रमुख क्षेत्रों (स्वास्थ्य, पेशेवर, व्यक्तिगत, सामाजिक) को ट्रैक करता है। हमारा लाइव कमांड डैशबोर्ड वास्तविक समय में आपके दैनिक संतुलन को मापता है, जिससे आप काम के तनाव से बचते हुए स्वास्थ्य और रिश्तों को भी समय दे पाते हैं।", "⚖️", Color(0xFFE91E63)),
-            FaqItem("यह ऐप किसने बनाया? (अंकित की कहानी)", "AuraByte का निर्माण डेवलपर Ankit Sudegora ने Gemini के साथ मिलकर किया है। 'मैं काफी समय से चार्ल्स डुहिग के सिद्धांत पर आधारित एक सुंदर और विज्ञापन-मुक्त ऐप ढूंढ रहा था। कुछ न मिलने पर मैंने स्वयं इसे ऑफलाइन और पूरी तरह सुरक्षित बनाने का निर्णय लिया। ♥ी के साथ विकसित!'", "👨‍💻", Color(0xFF2E7D32))
+            FaqItem(
+                "इस ऐप के पीछे की साइंस क्या है?", 
+                "AuraByte एक आसान साइकोलॉजिकल ट्रिक पर काम करता है: संकेत ➔ आदत ➔ पुरस्कार (Habit Loop)। 'ज़्यादा कोडिंग करना' जैसे ढीले वादे करने के बजाय, आप एक निश्चित ट्रिगर तय करते हैं (जैसे 'जब मैं सुबह 9 बजे डेस्क पर बैठूँगा') और उसके साथ एक छोटा सा काम जोड़ते हैं ('1 DSA सवाल सॉल्व करूँगा')। इसके तुरंत बाद मिलने वाला रिवॉर्ड आपके दिमाग को इस रूटीन का आदी बना देता है।", 
+                "💡", 
+                Color(0xFF1565C0)
+            ),
+            FaqItem(
+                "ऐसी आदत कैसे बनाएं जो कभी न छूटे?", 
+                "सीक्रेट यह है कि शुरुआत बहुत ही छोटी करें और इसे उन कामों से जोड़ दें जो आप रोज़ बिना सोचे-समझे करते हैं (जैसे ब्रश करना या लैपटॉप खोलना)। शुरुआत में सिर्फ रोज़ ऐप पर आने और काम करने पर ध्यान दें। बिना बर्नआउट हुए लगातार अपनी स्ट्रीक ('Heatwave') बनाए रखने के लिए हमारे फ्लेक्सिबल शेड्यूल (दैनिक, कार्यदिवस, वीकेंड) का उपयोग करें।", 
+                "🔥", 
+                Color(0xFFEF6C00)
+            ),
+            FaqItem(
+                "अपने जीवन को ४ क्षेत्रों में बांटना क्यों ज़रूरी है?", 
+                "क्योंकि करियर में आगे बढ़ने का कोई मतलब नहीं रह जाता अगर आपका स्वास्थ्य या आपके रिश्ते बिगड़ने लगें। AuraByte आपको रोज़ाना ४ ज़रूरी पिलर्स पर नज़र रखने के लिए प्रेरित करता है: स्वास्थ्य, पेशेवर, व्यक्तिगत, और परिवार। यह डैशबोर्ड आपको आईना दिखाता है ताकि आपका जीवन हर तरफ से संतुलित रहे।", 
+                "⚖️", 
+                Color(0xFFE91E63)
+            ),
+            FaqItem(
+                "इसे किसने बनाया? (अंकित की कहानी)", 
+                "हे, मैं हूँ अंकित। मैं लंबे समय से एक ऐसा आदत ट्रैक करने वाला ऐप ढूंढ रहा था जो सुंदर हो, डार्क मोड में हो, विज्ञापन-मुक्त हो और पूरी तरह से प्राइवेट हो। बाज़ार में मौजूद ज़्यादातर ऐप्स या तो बहुत जटिल थे या पैसों के पीछे भाग रहे थे। इसलिए, मैंने Gemini के साथ मिलकर खुद का AuraByte बनाया। बिना किसी बकवास और बिना इंटरनेट के चलने वाला एक साफ-सुथरा वर्कस्पेस—उन डेवलपर्स के लिए जो असल में लाइफ में बदलाव देखना चाहते हैं। ♥️ के साथ निर्मित!", 
+                "👨‍💻", 
+                Color(0xFF2E7D32)
+            )
         )
         AppLanguage.GERMAN -> listOf(
-            FaqItem("Wie verstehe ich diese Anwendung?", "AuraByte basiert auf der wissenschaftlichen Gewohnheitsschleife nach Charles Duhigg: Auslöser ➔ Routine ➔ Belohnung. Indem Sie einen Auslöser definieren (z. B. 'am Schreibtisch sitzen'), automatisieren Sie positive Routinen ('100 Wörter schreiben'), verstärkt durch Belohnungen ('heißer Tee').", "💡", Color(0xFF1565C0)),
-            FaqItem("Wie baue ich eine Gewohnheit auf, die dauerhaft bleibt?", "Dauerhaftigkeit entsteht, wenn Sie Ihren Auslöser mit bestehenden Gewohnheiten und sofortigen Belohnungen verbinden. Fangen Sie extrem klein an, konzentrieren Sie sich auf Beständigkeit und nutzen Sie unsere automatischen Zeitpläne, um Ihre Beständigkeitsserie ('Heatwave') auszubauen!", "🔥", Color(0xFFEF6C00)),
-            FaqItem("Wie hilft diese App, mein Leben wertvoller zu machen?", "Ein wertvolles Leben entsteht durch Balance. AuraByte verfolgt 4 Kernbereiche (Gesundheit, Beruf, Persönlich, Sozial). Unser Live-Command-Dashboard zeigt Ihre tägliche Balance in Echtzeit an, um Burnout zu vermeiden und gleichzeitig Vitalität, beruflichen Erfolg und tiefe Beziehungen zu nähren.", "⚖️", Color(0xFFE91E63)),
-            FaqItem("Wer hat diese App entwickelt? (Die Story von Ankit)", "AuraByte wurde vom Entwickler Ankit Sudegora in Zusammenarbeit mit Gemini erstellt. 'Ich habe lange nach einem werbefreien, ästhetischen Gewohnheitstracker gesucht, der auf der Psychologie von Duhigg basiert. Da ich nichts fand, habe ich diesen sauberen, eigenständigen Offline-Arbeitsbereich gebaut. Entwickelt mit ♥️!'", "👨‍💻", Color(0xFF2E7D32))
+            FaqItem(
+                "Welche Wissenschaft steckt hinter dieser App?", 
+                "AuraByte basiert auf einem einfachen psychologischen Trick: der Gewohnheitsschleife aus Auslöser ➔ Routine ➔ Belohnung. Statt vager Ziele wie 'mehr Sport' verknüpfst du einen klaren Auslöser ('Wenn ich um 7 Uhr meine Laufschuhe sehe') mit einer winzigen Aktion ('Ich gehe 5 Minuten raus') und belohnst dich sofort danach. So programmierst du dein Gehirn um.", 
+                "💡", 
+                Color(0xFF1565C0)
+            ),
+            FaqItem(
+                "Wie baue ich eine Gewohnheit auf, die wirklich bleibt?", 
+                "Das Geheimnis ist, lächerlich klein anzufangen und die neue Routine an Dinge zu knüpfen, die du sowieso schon automatisch tust (wie Zähneputzen oder den Laptop aufklappen). Konzentriere dich anfangs nur darauf, überhaupt aufzutauchen. Nutze unsere flexiblen Zeitpläne (Täglich, Werktage, Wochenende), um deine 'Heatwave'-Serie auszubauen, ohne auszubrennen.", 
+                "🔥", 
+                Color(0xFFEF6C00)
+            ),
+            FaqItem(
+                "Warum sollte ich mein Leben in 4 Quadranten aufteilen?", 
+                "Weil Erfolg im Job wertlos ist, wenn deine Gesundheit oder deine Beziehungen vor dem Aus stehen. AuraByte zwingt dich dazu, deinen Alltag in vier essenziellen Bereichen zu tracken: Gesundheit, Beruf, Persönliches und Familie. Ein Realitätscheck, der dich im Gleichgewicht hält.", 
+                "⚖️", 
+                Color(0xFFE91E63)
+            ),
+            FaqItem(
+                "Wer hat die App gebaut? (Ankits Story)", 
+                "Hi, ich bin Ankit. Ich habe ewig nach einem sauberen Dark-Mode-Gewohnheitstracker gesucht, der werbefrei, absolut privat und psychologisch fundiert ist. Alles auf dem Markt war entweder überladen oder hinter einer Paywall versteckt. Also habe ich mich mit Gemini zusammengetan und AuraByte einfach selbst gebaut. Ein komplett offline funktionierender, ablenkungsfreier Workspace—mit ♥️ gebaut für Entwickler, die einfach machen wollen.", 
+                "👨‍💻", 
+                Color(0xFF2E7D32)
+            )
         )
         AppLanguage.JAPANESE -> listOf(
-            FaqItem("このアプリの仕組みは？", "AuraByteはチャールズ・デュヒッグ式の習慣ループ（きっかけ ➔ 行動 ➔ ごほうび）に基づいています。日常生活の「きっかけ」（例:『デスクに座る』）を設定し、ポジティブな「行動」（例:『日記を100文字書く』）を行い、すぐの「ごほうび」（例:『美味しいお茶を飲む』）で脳に定着させます。", "💡", Color(0xFF1565C0)),
-            FaqItem("一生モノの習慣を身につけるには？", "定着させるカギは、きっかけを確実に起こる日常行動と結びつけ、すぐにごほうびを与えることです。最初は驚くほど小さく始め、継続を最優先にしましょう。自動頻度スケジュールを活用して、継続のバロメーター（Heatwave）を伸ばしていきましょう！", "🔥", Color(0xFFEF6C00)),
-            FaqItem("人生の価値を高めるために、このアプリはどう役立ちますか？", "価値ある人生はバランスから生まれます。AuraByteは4つの重要分野（健康、仕事、個人、社交）を追跡します。リアルタイムCommand Dashboardが日々のバランスを数値化し、どれか一つに偏ることなく、調和した充実したライフスタイルを築けます。", "⚖️", Color(0xFFE91E63)),
-            FaqItem("開発者のストーリーは？", "AuraByteは、開発者のAnkit SudegoraがGeminiと共同開発したものです。『デュヒッグ式の心理学に基づいた、美しく広告のない習慣トラッカーをずっと探していました。満足できるツールが見つからなかったため、オフラインで機能するクリーンなこのアプリを自分で作りました。愛を込めて構築 ♥️』", "👨‍💻", Color(0xFF2E7D32))
+            FaqItem(
+                "このアプリの仕組みは？", 
+                "AuraByteはシンプルな心理学のハック、つまり「きっかけ ➔ 行動 ➔ ごほうび」の習慣ループに基づいています。「もっと勉強する」といった曖昧な目標を立てる代わりに、「デスクに座ったら」という明確なきっかけと「DSAを1問解く」という小さな行動を結びつけ、すぐにごほうびを与えます。これが脳の配線を変える一番の近道です。", 
+                "💡", 
+                Color(0xFF1565C0)
+            ),
+            FaqItem(
+                "本当に続く習慣を身につけるには？", 
+                "秘訣は、あきれるほど小さく始め、すでに無意識にやっていること（歯磨きやノートPCを開くなど）に新しい行動をくっつけることです。最初は「とにかく毎日やる」ことだけに集中しましょう。平日の仕事中や週末など、ライフスタイルに合わせたスケジュール設定で、燃え尽きることなく「Heatwave（継続の熱量）」を維持できます。", 
+                "🔥", 
+                Color(0xFFEF6C00)
+            ),
+            FaqItem(
+                "なぜ人生を4つのエリアに分けるのですか？", 
+                "仕事でどれだけ結果を出しても、体調を崩したり、大切な人との関係が壊れてしまっては意味がないからです。AuraByteは「健康」「仕事」「個人」「家族」という4つの柱で日々の行動を管理します。これは、自分が今どこに偏っているのかを突きつける、人生のリアルタイムなバランス調整ツールです。", 
+                "⚖️", 
+                Color(0xFFE91E63)
+            ),
+            FaqItem(
+                "開発者はどんな人？（Ankitのストーリー）", 
+                "こんにちは、Ankitです。心理学に基づいた、広告が一切ないクリーンなダークモードの習慣トラッカーをずっと探していました。しかし、世の中にあるツールは機能が多すぎて使いづらいか、サブスク課金ばかり。それなら自分で作ろうと思い、Geminiとタッグを組んで開発したのがAuraByteです。完全にオフラインで集中できる、目標を実行に移したい開発者のためのワークスペースを、愛を込めてお届けします ♥️", 
+                "👨‍💻", 
+                Color(0xFF2E7D32)
+            )
         )
         AppLanguage.PORTUGUESE -> listOf(
-            FaqItem("Como eu entendo este aplicativo?", "O AuraByte baseia-se no método de loop de hábitos de Charles Duhigg: Gatilho ➔ Ação ➔ Recompensa. Ao vincular um gatilho ambiental (ex: 'sentar na escrivaninha'), você automatiza uma ação positiva ('escrever 100 palavras') reforçada por um prêmio ('chá quente') para reconfigurar seu cérebro.", "💡", Color(0xFF1565C0)),
-            FaqItem("Como criar hábitos que durem para sempre?", "A fixação depende de associar o Gatilho a estímulos consistentes do seu dia a dia e Recompensas imediatas. Comece extremamente pequeno, priorize a consistência primária e use nossos cronogramas automáticos para manter sua chama ativa ('Heatwave')!", "🔥", Color(0xFFEF6C00)),
-            FaqItem("Como este aplicativo torna minha vida mais valiosa?", "Uma vida valiosa exige equilíbrio constante. O AuraByte monitora 4 áreas essenciais (Saúde, Profissional, Pessoal, Social). O Painel de Comando em tempo real avalia seu equilíbrio diário, protegendo você do esgotamento ao mesmo tempo que nutre sua vitalidade, carreira, mente e conexões afetivas.", "⚖️", Color(0xFFE91E63)),
-            FaqItem("Quem desenvolveu este aplicativo? (História de Ankit)", "O AuraByte foi criado pelo desenvolvedor Ankit Sudegora em colaboração com o Gemini. 'Eu buscava um rastreador de hábitos focado em psicologia comportamental livre de propagandas há muito tempo. Por não encontrar, criei este espaço de trabalho estético, limpo e offline. Desenvolvido com muito ♥️!'", "👨‍💻", Color(0xFF2E7D32))
+            FaqItem(
+                "Qual é a ciência por trás deste app?", 
+                "O AuraByte funciona com base em um truque psicológico simples: o loop de Gatilho ➔ Ação ➔ Recompensa. Em vez de criar metas vagas como 'estudar mais', você conecta um gatilho específico ('Quando eu sentar na mesa às 8h') a uma microação ('Vou resolver 1 problema de algoritmo') e se dá uma recompensa imediata. É assim que você reconfigura o seu cérebro pelo caminho de menor resistência.", 
+                "💡", 
+                Color(0xFF1565C0)
+            ),
+            FaqItem(
+                "Como construir um hábito que realmente dure?", 
+                "O segredo é começar ridiculamente pequeno e ancorar a nova rotina em coisas que você já faz no piloto automático (como escovar os dentes ou abrir o notebook). Esqueça a perfeição; foque apenas em aparecer todo santo dia. Use nossos cronogramas flexíveis (Diário, Dias de semana, Fins de semana) para manter o seu 'Heatwave' aceso sem se esgotar.", 
+                "🔥", 
+                Color(0xFFEF6C00)
+            ),
+            FaqItem(
+                "Por que dividir minha vida em 4 quadrantes?", 
+                "Porque não adianta nada evoluir na carreira se a sua saúde ou os seus relacionamentos estiverem desmoronando. O AuraByte te força a acompanhar o progresso diário em quatro pilares fundamentais: Saúde, Profissional, Pessoal e Família. É um choque de realidade para te manter equilibrado e focado no que importa.", 
+                "⚖️", 
+                Color(0xFFE91E63)
+            ),
+            FaqItem(
+                "Quem desenvolveu o app? (História do Ankit)", 
+                "Fala aí, eu sou o Ankit. Passei anos procurando um rastreador de hábitos em modo escuro que fosse limpo, sem anúncios, totalmente privado e baseado em psicologia comportamental de verdade. Tudo no mercado era poluído ou cobrava assinatura. Então, juntei forças com o Gemini e montei o AuraByte. Um espaço de trabalho offline e sem distrações—feito com muito ♥️ para desenvolvedores que querem parar de planejar e começar a executar.", 
+                "👨‍💻", 
+                Color(0xFF2E7D32)
+            )
         )
         else -> listOf(
-            FaqItem("How do I understand this Application?", "AuraByte is built on Charles Duhigg's psychology-backed habit loop: Trigger (Cue) ➔ Action (Routine) ➔ Reward. By specifying an environmental trigger (e.g. 'sit down at desk'), you automate positive actions ('write 100 words'), reinforced by micro-rewards ('hot tea') to rewire your brain path of least resistance.", "💡", Color(0xFF1565C0)),
-            FaqItem("How do I build a habit which will always be there?", "Stickiness comes from connecting your Trigger to existing, highly consistent daily cues and immediate Rewards. Start incredibly small, focus strictly on consistency first, and use our automatic frequency schedules (Daily, Weekdays, Weekends, Monthly) to build a long streak ('Heatwave') without breaking the chain!", "🔥", Color(0xFFEF6C00)),
-            FaqItem("How can this app help make my life valuable?", "Valuable living comes from life-wide balance. AuraByte tracks 4 key areas (Health, Professional, Personal, Social). Our live Command Dashboard tracks your daily equilibrium across these dimensions in real-time, preventing burn-out while nurturing healthy vitality, professional growth, wisdom, and core relationships.", "⚖️", Color(0xFFE91E63)),
-            FaqItem("Who built this application? (Ankit's Story)", "AuraByte was created by developer Ankit Sudegora in collaboration with Gemini. 'I searched for an aesthetic, ad-free habit loop tracker that followed Duhigg's psychology for a long time. Unable to find anything satisfying, I built this clean, beautiful, and fully offline workspace. Developed with ♥️!'", "👨‍💻", Color(0xFF2E7D32))
+            FaqItem(
+                "What's the science behind this app?", 
+                "AuraByte is built on a simple psychological hack: the Cue ➔ Action ➔ Reward loop. Instead of setting vague resolutions like 'code more,' you anchor a concrete trigger ('When I sit down at my desk with coffee') to a tiny micro-action ('I will solve 1 DSA problem') followed by an instant reward. It rewires your brain using the path of least resistance.", 
+                "💡", 
+                Color(0xFF1565C0)
+            ),
+            FaqItem(
+                "How do I build a habit that actually sticks?", 
+                "The secret is starting stupidly small and stacking it onto things you already do without thinking (like brushing your teeth or launching your IDE). Focus entirely on just showing up every day. Use our flexible tracking schedules (Daily, Weekdays, Weekends) to run a high 'Heatwave' streak without burning yourself out.", 
+                "🔥", 
+                Color(0xFFEF6C00)
+            ),
+            FaqItem(
+                "Why divide my life into 4 quadrants?", 
+                "Because crushing your career milestones doesn't mean anything if your physical health or your relationships are actively falling apart. AuraByte holds you accountable across four baseline dimensions: Health, Professional, Personal, and Family. It's a daily reality check to make sure you stay balanced and consistent.", 
+                "⚖️", 
+                Color(0xFFE91E63)
+            ),
+            FaqItem(
+                "Who built this? (Ankit's Story)", 
+                "Hey, I'm Ankit. I spent years looking for a crisp, minimal dark-mode habit loop tracker that was completely ad-free, secure, and based on actual behavioral psychology. Everything out there was either absolute bloatware or locked behind a monthly subscription. So, I partnered up with Gemini and built AuraByte myself. A fully offline, distraction-free workspace—handcrafted with ♥️ for devs who just want to execute.", 
+                "👨‍💻", 
+                Color(0xFF2E7D32)
+            )
         )
     }
 }
@@ -3474,70 +3638,71 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
 private fun getLifeAreaDoc(language: AppLanguage): LifeAreaDoc {
     return when (language) {
         AppLanguage.SPANISH -> LifeAreaDoc(
-            title = "Filosofía de las 4 Áreas de la Vida",
-            introduction = "La vida es un motor complejo y multidimensional. Si un cilindro falla, todo el vehículo sufre. Destilamos la experiencia humana en 4 dominios esenciales para ayudarte a mantener un estilo de vida perfectamente armonioso:",
+            title = "La filosofía de los 4 cuadrantes",
+            introduction = "Tu vida es como un motor de alto rendimiento. Si un solo cilindro falla, todo el vehículo empieza a fallar. Para evitar que te satures o descuides lo importante, organizamos tus hábitos en 4 dimensiones críticas de crecimiento continuo:",
             areas = listOf(
-                Triple("1. Salud (Vitalidad)", "La base física de todo. Tu sueño, nutrición y ejercicio determinan la energía disponible para alimentar todo lo demás en tu día.", Color(0xFF2E7D32)),
-                Triple("2. Profesional (Impacto)", "Tu carrera, habilidades y finanzas. Es tu vía para perfeccionar tu maestría técnica y aportar valor real a la sociedad.", Color(0xFF1565C0)),
-                Triple("3. Personal (Crecimiento)", "Lectura, meditación, pasatiempos y autorreflexión. Esto nutre tu mundo interno y mantiene tu mente ágil, calmada y sabia.", Color(0xFFE91E63)),
-                Triple("4. Social (Conexión)", "Familia, relaciones profundas y comunidad. Brinda la red de seguridad emocional y el amor que los seres humanos necesitan para prosperar.", Color(0xFFEF6C00))
+                Triple("1. Salud (Tu base de energía)", "El pilar físico que sostiene todo lo demás. Tu sueño, nutrición y entrenamiento diario configuran la batería real con la que enfrentarás tus desafíos.", Color(0xFF2E7D32)),
+                Triple("2. Profesional (Impacto y maestría)", "Tu carrera, tus proyectos personales y tus habilidades técnicas. Este es tu terreno para escribir código excepcional, resolver arquitecturas complejas y generar valor real.", Color(0xFF1565C0)),
+                Triple("3. Personal (Mente y sabiduría)", "Lectura, pasatiempos, meditación y autorreflexión (como monitorear y controlar tus problemas de ira). Esto nutre tu mundo interno y mantiene tu mente ágil, fría y bajo control.", Color(0xFFE91E63)),
+                Triple("4. Familia (Conexión real)", "Tu red de seguridad emocional. El tiempo intencional y de alta calidad que dedicas a tus padres, pareja, hijos o amigos cercanos. Es lo que le da sentido a todo el esfuerzo.", Color(0xFFEF6C00))
             ),
-            conclusion = "Al registrar hábitos estructurados en estas áreas, evitas desequilibrios. El panel 'Command' te muestra en tiempo real cómo estás cuidando cada área vital."
+            conclusion = "Al balancear tus 'bytes' en estos bloques, evitas que tu crecimiento sea desigual. Tu Command Dashboard te recordará de forma visual si estás dejando algún cilindro vacío."
         )
         AppLanguage.HINDI -> LifeAreaDoc(
-            title = "जीवन के ४ मूलभूत क्षेत्रों का दर्शन",
-            introduction = "जीवन एक जटिल, बहुआयामी इंजन की तरह है। यदि इसका एक भी हिस्सा खराब होता है, तो पूरा वाहन संघर्ष करता है। हमने मानव जीवन को ४ मुख्य क्षेत्रों में विभाजित किया है ताकि आप पूरी तरह संतुलित और खुशहाल जीवन जी सकें:",
+            title = "४ लाइफ क्वाड्रंट्स का दर्शन",
+            introduction = "आपका जीवन एक हाई-परफॉर्मेंस इंजन की तरह है। यदि इसका एक भी सिलेंडर रुक जाए, तो पूरी गाड़ी डगमगाने लगती है। जीवन को एकतरफा होने से बचाने के लिए, हमने आपके डेली रूटीन को ४ मुख्य हिस्सों में सेट किया है:",
             areas = listOf(
-                Triple("१. स्वास्थ्य (vitality)", "आपका स्वास्थ्य जीवन की नींव है। आपकी नींद, पोषण और व्यायाम वह ऊर्जा भंडार बनाते हैं जो बाकी सब कुछ संचालित करता है।", Color(0xFF2E7D32)),
-                Triple("२. पेशेवर (Career & Mastery)", "आपका करियर, ज्ञान और वित्तीय स्थिरता। समाज में योगदान देने और अपनी क्षमताओं को निखारने का यही मुख्य माध्यम है।", Color(0xFF1565C0)),
-                Triple("३. व्यक्तिगत (Mental Growth)", "ज्ञान अर्जन, आत्मनिरीक्षण, कला, और ध्यान। यह आपके मन को शांत, प्रखर और संवेदनशील बनाए रखता है।", Color(0xFFE91E63)),
-                Triple("४. सामाजिक (Connection)", "परिवार, गहरे मित्र, और सामाजिक रिश्ते। सच्चे रिश्ते जीवन में मानसिक सुरक्षा और भरपूर खुशियों का मुख्य स्रोत हैं।", Color(0xFFEF6C00))
+                Triple("१. स्वास्थ्य (आपकी ऊर्जा का स्रोत)", "यह आपका फिजिकल फाउंडेशन है। आपकी नींद, डाइट और वर्कआउट वो बैटरी चार्ज करते हैं जिससे आपकी बाकी की पूरी दिनचर्या चलती है।", Color(0xFF2E7D32)),
+                Triple("२. पेशेवर (करियर और स्किल डेवलपमेंट)", "आपकी नौकरी, कोड क्वालिटी, DSA प्रैक्टिस और ड्रीम प्रोजेक्ट्स। यह वो ज़मीन है जहाँ आप अपनी टेक्निकल मास्टर हासिल करते हैं और दुनिया को अपना आउटपुट देते हैं।", Color(0xFF1565C0)),
+                Triple("३. व्यक्तिगत (मन और आत्मनिरीक्षण)", "किताबें पढ़ना, नई चीज़ें सीखना, ध्यान लगाना और अपनी कमियों (जैसे कि गुस्से की समस्या) पर काम करना। यह आपके दिमाग को शांत, तेज़ और फोकस्ड रखता है।", Color(0xFFE91E63)),
+                Triple("४. परिवार (सच्चे रिश्ते और जुड़ाव)", "आपका इमोशनल सपोर्ट सिस्टम। अपने परिवार और करीबी दोस्तों के साथ बिताया गया वो क्वालिटी टाइम जहाँ आप बिना किसी गैजेट के पूरी तरह उनके साथ मौजूद होते हैं। यही असल खुशी है।", Color(0xFFEF6C00))
             ),
-            conclusion = "इन क्षेत्रों में बंटे हुए आदतों को ट्रैक करने से आपका विकास कभी भी एकाकी नहीं होता। डैशबोर्ड के माध्यम से आप निरंतर अपने चारों क्षेत्रों को मजबूत और संतुलित रख सकते हैं।"
+            conclusion = "इन अलग-अलग क्षेत्रों में आदतें बनाने से आप कभी लाइफ में पीछे नहीं छूटेंगे। डैशबोर्ड आपको लाइव इंडिकेटर दिखाता रहेगा कि आपके इंजन का कौन सा सिलेंडर कमज़ोर पड़ रहा है।"
         )
         AppLanguage.GERMAN -> LifeAreaDoc(
-            title = "Philosophie der 4 Lebensbereiche",
-            introduction = "Das Leben ist ein hochkomplexer Motor. Wenn ein Zylinder ausfällt, leidet das ganze Fahrzeug. Wir haben die menschliche Existenz auf 4 Kernbereiche reduziert, um Ihnen zu helfen, ein harmonisches Leben zu führen:",
+            title = "Die Philosophie der 4 Quadranten",
+            introduction = "Das Leben ist wie ein Hochleistungsmotor. Wenn ein einziger Zylinder ausfällt, stottert das ganze Fahrzeug. Damit dein Alltag nicht einseitig wird, teilen wir deine Gewohnheiten in 4 kritische Lebensbereiche auf:",
             areas = listOf(
-                Triple("1. Gesundheit (Vitalität)", "Das körperliche Fundament. Schlaf, Ernährung und Bewegung sind die Energiereserve, die alles andere in Ihrem Alltag antreibt.", Color(0xFF2E7D32)),
-                Triple("2. Beruf (Wirkung & Erfolg)", "Karriere, Finanzen und Fähigkeiten. So bauen Sie Kompetenz auf und leisten einen wertvollen Beitrag zur Welt.", Color(0xFF1565C0)),
-                Triple("3. Persönlich (Geist & Seele)", "Mentale Weiterbildung, Meditation, Hobbys. Das nährt Ihre innere Welt und hält Ihren Verstand wach, ruhig und weise.", Color(0xFFE91E63)),
-                Triple("4. Sozial (Liebe & Beziehung)", "Familie, enge Freunde, Gemeinschaft. Tiefe, vertrauensvolle Beziehungen schenken emotionale Sicherheit und echte Lebensfreude.", Color(0xFFEF6C00))
+                Triple("1. Gesundheit (Deine Energiebasis)", "Das körperliche Fundament für alles andere. Guter Schlaf, saubere Ernährung und Training sind der Treibstoff, der deinen Tag antreibt.", Color(0xFF2E7D32)),
+                Triple("2. Beruf (Wirkung & Code-Maestrie)", "Deine Karriere, Tech-Skills und eigenen Projekte. Hier verfeinerst du deine Fähigkeiten, baust funktionale Systeme und schaffst echten Wert.", Color(0xFF1565C0)),
+                Triple("3. Persönlich (Geist & Selbstreflexion)", "Lesen, Meditation, Hobbys und die bewusste Arbeit an dir selbst (z. B. das Tracken von Aggressions- oder Wutmetriken). Das hält deinen Verstand scharf, ruhig und besonnen.", Color(0xFFE91E63)),
+                Triple("4. Familie (Echte Bindungen)", "Dein emotionales Sicherheitsnetz. Die bewusste, ungestörte Zeit für Partner, Eltern, Kinder oder enge Freunde. Das, was am Ende des Tages wirklich zählt.", Color(0xFFEF6C00))
             ),
-            conclusion = "Durch die Verteilung Ihrer Gewohnheiten auf diese Bereiche vermeiden Sie Einseitigkeit. Das Command-Dashboard zeigt Ihnen in Echtzeit, wo Sie stehen."
+            conclusion = "Durch die Verteilung deiner täglichen Gewohnheiten verhinderst du, dass du eine Baustelle im Leben ignorierst. Das Command-Dashboard zeigt dir sofort, welcher Zylinder Aufmerksamkeit braucht."
         )
         AppLanguage.JAPANESE -> LifeAreaDoc(
-            title = "4つのライフエリアの哲学",
-            introduction = "人生は複雑な多次元エンジンです。1つのシリンダーが停止すれば、車全体がうまく走りません。調和のとれたライフスタイルをサポートするため、人間の営みを4大領域に集約しました：",
+            title = "4つのクアドラント（柱）の哲学",
+            introduction = "人生は高出力のエンジンのようなものです。1つのシリンダーが焼き付けば、車全体がストップしてしまいます。生活のバランスを保ち、燃え尽き症候群を防ぐために、日々の習慣を4つの領域に最適化しました：",
             areas = listOf(
-                Triple("1. 健康 (活力のベース)", "すべての土台。睡眠、栄養、運動は、日々のあらゆる活動に燃料を供給するエネルギーの源泉です。", Color(0xFF2E7D32)),
-                Triple("2. 職業 (社会的インパクト)", "キャリア、スキル、経済的自立。能力を磨き、社会に価値を提供するアプローチ。やりがいを実感できます。", Color(0xFF1565C0)),
-                Triple("3. 個人 (内なる知恵)", "読書、瞑想、創作活動。内面を豊かにし、精神を柔軟で穏やかに、かつ機知に富んだ状態に保ちます。", Color(0xFFE91E63)),
-                Triple("4. 社交 (心のつながり)", "家族、友達、コミュニティ。社会的動物である人間に豊かで深い安心感と愛をもたらす重要な関係。長寿に直結します。", Color(0xFFEF6C00))
+                Triple("1. 健康（すべてのエネルギー源）", "すべての土台となる肉体的な基盤です。良質な睡眠、栄養、そして運動が、日々の開発や思考を支えるバッテリーの役割を果たします。", Color(0xFF2E7D32)),
+                Triple("2. 職業（社会的インパクトと技術の磨き）", "キャリア、技術スタックの向上、DSAの練習、個人の開発プロジェクト。自分の能力を尖らせ、エンジニアとして価値を世の中にアウトプットする領域です。", Color(0xFF1565C0)),
+                Triple("3. 個人（精神の向上と内省）", "読書や創作、瞑想、あるいは自身の感情管理（イライラや怒りのコントロールなど）。内面を豊かにし、どんな状況でもブレない冷静で賢明なマインドを作ります。", Color(0xFFE91E63)),
+                Triple("4. 家族（本当の人間関係）", "あなたの精神的なセーフティネットです。スマホの画面を閉じ、家族や大切な人と向き合うために確保する静かで上質な時間。これこそが、人生を支える本質です。", Color(0xFFEF6C00))
             ),
-            conclusion = "特定の分野だけに偏ることなく生活バランスを整えることができます。Command Dashboard of progress is dynamic."
+            conclusion = "特定のタスクだけに偏ることなく、日々の進捗を均等にビルडできます。Command Dashboardが、どのシリンダーに燃料が足りていないかをリアルタイムであなたに伝えます。"
         )
         AppLanguage.PORTUGUESE -> LifeAreaDoc(
-            title = "A Filosofia das 4 Áreas da Vida",
-            introduction = "A vida é um motor complexo. Se um cilindro falha, todo o veículo sofre. Destilamos a experiência humana em 4 domínios essenciais para ajudar você a manter um viver plenamente equilibrado e produtivo:",
+            title = "A Filosofia dos 4 Quadrantes",
+            introduction = "Sua vida funciona como um motor de alta performance. Se um único cilindro falhar, o veículo inteiro começa a engasgar. Para evitar que você negligencie o que importa, organizamos suas rotinas em 4 pilares centrais:",
             areas = listOf(
-                Triple("1. Saúde (Base de Força)", "O pilar físico. Seu sono, alimentação e treinos são o reservatório de energia que abastece todas as outras coisas no seu dia.", Color(0xFF2E7D32)),
-                Triple("2. Profissional (Habilidade)", "Carreira, estudos e finanças. É como você busca a excelência prática, desenvolve novas competências e gera valor social.", Color(0xFF1565C0)),
-                Triple("3. Pessoal (Mente Livre)", "Leitura, meditação, hobbies. Alimenta sua autoconsciência e mantém sua mente flexível, afiada, calma e equilibrada.", Color(0xFFE91E63)),
-                Triple("4. Social (Amor & Parceria)", "Família, amizades sinceras e comunidade. Oferece a rede de apoio que fortalece o bem-estar psicológico e gera felicidade real.", Color(0xFFEF6C00))
+                Triple("1. Saúde (Sua base de força)", "O pilar físico que sustenta tudo. Seu sono, sua alimentação e seus treinos são a bateria que mantém você focado e operante ao longo do dia.", Color(0xFF2E7D32)),
+                Triple("2. Profissional (Impacto e maestria)", "Sua carreira, linhas de código, DSA e projetos paralelos. É aqui que você refina sua capacidade técnica, constrói sistemas robustos e gera valor de mercado.", Color(0xFF1565C0)),
+                Triple("3. Pessoal (Mente livre e autoconhecimento)", "Leitura, hobbies, meditação e autocontrole (como monitorar e mitigar problemas de temperamento ou raiva). Mantém a sua mente afiada, fria e sob comando.", Color(0xFFE91E63)),
+                Triple("4. Família (Conexão e presença)", "Sua rede de apoio emocional. O tempo intencional e sem distrações digitais dedicado a quem você ama—seus pais, parceiro(a), filhos ou amigos reais. É o que dá sentido à jornada.", Color(0xFFEF6C00))
             ),
-            conclusion = "Rotinas espalhadas por estas áreas evitam que você negligencie o que importa. O painel interativo avalia essa harmonia diariamente."
+            conclusion = "Dividir seus 'bytes' por essas frentes evita que sua vida cresça torta. O painel interativo te mostra em tempo real como está a saúde de cada engrenagem vital."
         )
         else -> LifeAreaDoc(
-            title = "The Philosophy of the 4 Areas of Life",
-            introduction = "Life is a complex, multi-dimensional engine. If one cylinder misfires, the entire vehicle struggles. We distilled the human experience into 4 core domains to help you maintain a perfectly balanced, vibrant, and incredibly fulfilling lifestyle:",
+            title = "The Philosophy of the 4 Quadrants",
+            introduction = "Your life functions exactly like a high-performance engine. If a single cylinder misfires, the entire vehicle begins to sputter. To keep you from tracking heavily in one area while completely neglecting another, we map your habits into 4 critical zones:",
             areas = listOf(
-                Triple("1. Health (Vitality)", "The physical base. Your sleep, nutrition, and exercise are the energy reserve that fuels everything else.", Color(0xFF2E7D32)),
-                Triple("2. Professional (Impact & Mastery)", "Your career, skills, and financial health. This of course is how you build competency and contribute value to the world.", Color(0xFF1565C0)),
-                Triple("3. Personal (Wisdom & Reflection)", "Mental growth, reading, meditation, and hobbies. This fulfills the internal self and keeps your mind agile and calm.", Color(0xFFE91E63)),
-                Triple("4. Social (Connection & Love)", "Family, deep friendships, and community. This provides the emotional safety net and love that humans need to thrive.", Color(0xFFEF6C00))
+                Triple("1. Health (Your Energy Baseline)", "The physical core that fuels everything else. Your sleep architecture, nutrition, and workout habits represent the raw battery capacity of your day.", Color(0xFF2E7D32)),
+                Triple("2. Professional (Impact & Code Mastery)", "Your career, engineering roadmap, DSA consistency, and side projects. This is where you hone your execution skills and build products of real value.", Color(0xFF1565C0)),
+                Triple("3. Personal (Mind & Self-Reflection)", "Reading, independent learning, meditation, and behavioral course-corrections (like logging and managing anger metrics). This expands your internal world and keeps your head cool.", Color(0xFFE91E63)),
+                Triple("4. Family (Intentional Connection)", "Your emotional anchor. High-quality, screens-down, active time spent nurturing your family, close friends, and core relationships. This is what keeps the grind meaningful.", Color(0xFFEF6C00))
             ),
-            conclusion = "By tracking habit loops categorized in these distinct domains, AuraByte prevents life lopsidedness. The Command Dashboard gives you a real-time health indicator of these vital cylinders."
+            conclusion = "By distributing your habits systematically, you prevent life from running lopsided. The Command Dashboard visually warns you the second one of your vital cylinders drops below optimal capacity."
         )
     }
+}
 }
