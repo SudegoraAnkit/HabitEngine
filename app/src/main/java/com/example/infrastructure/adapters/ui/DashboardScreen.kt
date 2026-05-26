@@ -543,6 +543,7 @@ Consistently developed by Gemini and Ankit ♥️
                 // Mastery Dashboard Grid
                 item {
                     CommandDashboard(
+                        selectedLanguage = selectedLanguage,
                         habits = uiState.habits,
                         logs = uiState.logs
                     )
@@ -551,6 +552,7 @@ Consistently developed by Gemini and Ankit ♥️
                 // AuraByte Heatwave Analytics Monitor
                 item {
                     HeatwaveDashboard(
+                        selectedLanguage = selectedLanguage,
                         habits = uiState.habits,
                         logs = uiState.logs,
                         selectedDate = uiState.selectedDate
@@ -725,6 +727,7 @@ Consistently developed by Gemini and Ankit ♥️
                         }
 
                         HabitCard(
+                            selectedLanguage = selectedLanguage,
                             habit = habit,
                             isCompleted = isCompleted,
                             isSelectable = isSelectable,
@@ -1007,6 +1010,7 @@ fun DateCard(
 // Life Domain Command Dashboard: Mastery Calculations
 @Composable
 fun CommandDashboard(
+    selectedLanguage: AppLanguage,
     habits: List<Habit>,
     logs: Map<String, Map<String, Boolean>>
 ) {
@@ -1030,13 +1034,15 @@ fun CommandDashboard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Life Domain Command Monitor",
+                    text = Localizations.get(selectedLanguage, "domain_dashboard_title"),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontFamily = FontFamily.Monospace,
-                    letterSpacing = 1.sp
+                    letterSpacing = 0.5.sp,
+                    modifier = Modifier.weight(1f)
                 )
+                Spacer(modifier = Modifier.width(8.dp))
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(100.dp))
@@ -1044,7 +1050,7 @@ fun CommandDashboard(
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = "Realtime Engine",
+                        text = Localizations.get(selectedLanguage, "realtime_indicator"),
                         fontSize = 9.sp,
                         color = MaterialTheme.colorScheme.secondary,
                         fontWeight = FontWeight.Bold,
@@ -1057,11 +1063,16 @@ fun CommandDashboard(
                 LifeDomain.values().forEach { domain ->
                     val percentage = masteryMap[domain] ?: 0
                     
-                    // Categorize mastery levels
-                    val (statusLabel, statusColor) = when {
-                        percentage < 40 -> "Critical" to ColorCritical
-                        percentage < 75 -> "Stable" to ColorWarning
-                        else -> "Mastery" to ColorSuccess
+                    // Categorize mastery levels using localized descriptions
+                    val statusLabel = when {
+                        percentage < 40 -> Localizations.get(selectedLanguage, "status_starting")
+                        percentage < 75 -> Localizations.get(selectedLanguage, "status_growing")
+                        else -> Localizations.get(selectedLanguage, "status_thriving")
+                    }
+                    val statusColor = when {
+                        percentage < 40 -> ColorCritical
+                        percentage < 75 -> ColorWarning
+                        else -> ColorSuccess
                     }
 
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1243,6 +1254,7 @@ fun HabitSparkline(
 // Psychological Habit Card: Cue -> Routine -> Reward
 @Composable
 fun HabitCard(
+    selectedLanguage: AppLanguage,
     habit: Habit,
     isCompleted: Boolean,
     isSelectable: Boolean,
@@ -1409,7 +1421,7 @@ fun HabitCard(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = "Psychological Habit Loop",
+                        text = Localizations.get(selectedLanguage, "guide_title"),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -1419,15 +1431,15 @@ fun HabitCard(
 
                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Row {
-                            Text(text = "Cue: ", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                            Text(text = "${Localizations.get(selectedLanguage, "guide_content_cue")}: ", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                             Text(text = habit.cueText, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
                         Row {
-                            Text(text = "Routine: ", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                            Text(text = "${Localizations.get(selectedLanguage, "guide_content_action")}: ", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                             Text(text = habit.routineText, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
                         Row {
-                            Text(text = "Reward: ", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                            Text(text = "${Localizations.get(selectedLanguage, "guide_content_reward")}: ", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                             Text(text = habit.rewardText, fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Medium)
                         }
                     }
@@ -2036,6 +2048,7 @@ private fun getPastYearHeatwave(
 // AuraByte Heatwave Consistency Dashboard
 @Composable
 fun HeatwaveDashboard(
+    selectedLanguage: AppLanguage,
     habits: List<Habit>,
     logs: Map<String, Map<String, Boolean>>,
     selectedDate: String
@@ -2075,9 +2088,39 @@ fun HeatwaveDashboard(
     }
     
     val (summaryEmoji, summaryLabel, summaryDescription, summaryColor) = when {
-        overallPercentage == 0 -> Quadruple("😭", "Untouched Streak", "Your routine loop is cold. Complete a habit to ignite!", ColorCritical)
-        overallPercentage == 100 -> Quadruple("🔥", "Flawless Streak", "Absolute mastery! Routine loop is fully vaporized!", ColorSuccess)
-        else -> Quadruple("😅", "Halfway Warming", "Progression active! Maintain discipline to heat up the engine.", ColorWarning)
+        overallPercentage == 0 -> Quadruple(
+            "🌱", 
+            Localizations.get(selectedLanguage, "status_starting"), 
+            if (selectedLanguage == AppLanguage.SPANISH) "Tu viaje de hábitos te espera. ¡Completa un hábito hoy para comenzar!"
+            else if (selectedLanguage == AppLanguage.HINDI) "आपकी आदत यात्रा आपका इंतजार कर रही है। आज ही शुरुआत करें!"
+            else if (selectedLanguage == AppLanguage.GERMAN) "Ihre Gewohnheits-Reise wartet auf Sie. Fangen Sie heute an!"
+            else if (selectedLanguage == AppLanguage.JAPANESE) "ハッピーな習慣があなたを待っています。今日から始めましょう！"
+            else if (selectedLanguage == AppLanguage.PORTUGUESE) "Sua jornada de hábitos está te esperando. Comece hoje!"
+            else "Your habit journey is waiting to grow. Complete a habit today to start!", 
+            ColorCritical
+        )
+        overallPercentage == 100 -> Quadruple(
+            "👑", 
+            Localizations.get(selectedLanguage, "status_thriving"), 
+            if (selectedLanguage == AppLanguage.SPANISH) "¡Trabajo excelente! Has completado el 100% de tus objetivos."
+            else if (selectedLanguage == AppLanguage.HINDI) "शानदार काम! आपने अपने १००% लक्ष्य पूरे किए हैं।"
+            else if (selectedLanguage == AppLanguage.GERMAN) "Großartig! Sie haben 100 % Ihrer Ziele erreicht."
+            else if (selectedLanguage == AppLanguage.JAPANESE) "すばらしい！今日まですべての項目を達成できました。"
+            else if (selectedLanguage == AppLanguage.PORTUGUESE) "Trabalho fantástico! Você atingiu 100% dos seus objetivos."
+            else "Perfect work! You've achieved 100% completion in this timezone!", 
+            ColorSuccess
+        )
+        else -> Quadruple(
+            "🌞", 
+            Localizations.get(selectedLanguage, "status_growing"), 
+            if (selectedLanguage == AppLanguage.SPANISH) "Vas por muy buen camino. ¡Sigue con entusiasmo para crear tu rutina!"
+            else if (selectedLanguage == AppLanguage.HINDI) "आप सही रास्ते पर हैं। अपनी आदत बनाने के लिए प्रयास जारी रखें!"
+            else if (selectedLanguage == AppLanguage.GERMAN) "Sie sind auf einem guten Weg. Machen Sie weiter so!"
+            else if (selectedLanguage == AppLanguage.JAPANESE) "着実に進歩しています。理想的な生活リズムをつくっていきましょう！"
+            else if (selectedLanguage == AppLanguage.PORTUGUESE) "Você está no caminho certo. Continue firme para firmar seu ritual!"
+            else "You are making steady progress. Keep going to build your habit loop!", 
+            ColorWarning
+        )
     }
 
     Card(
@@ -2098,13 +2141,15 @@ fun HeatwaveDashboard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "AuraByte Heatwave Engine",
+                    text = Localizations.get(selectedLanguage, "heatwave_dashboard_title"),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontFamily = FontFamily.Monospace,
-                    letterSpacing = 1.sp
+                    letterSpacing = 0.5.sp,
+                    modifier = Modifier.weight(1f)
                 )
+                Spacer(modifier = Modifier.width(8.dp))
                 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -2124,7 +2169,11 @@ fun HeatwaveDashboard(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = filter.name,
+                                text = when (filter) {
+                                    HeatwaveFilter.WEEK -> Localizations.get(selectedLanguage, "filter_week")
+                                    HeatwaveFilter.MONTH -> Localizations.get(selectedLanguage, "filter_month")
+                                    HeatwaveFilter.YEAR -> Localizations.get(selectedLanguage, "filter_year")
+                                },
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
@@ -2717,243 +2766,297 @@ object Localizations {
     private val strings = mapOf(
         AppLanguage.ENGLISH to mapOf(
             "app_title" to "AuraByte",
-            "app_subtitle" to "The habit loop constructor",
+            "app_subtitle" to "Your companion for building positive habits",
             "share_text" to "Share Receipts",
-            "share_progress" to "Shared success on AuraByte!",
-            "all_categories" to "All Domains",
+            "share_progress" to "Celebrating my daily habit progress!",
+            "all_categories" to "All Life Areas",
             "search_placeholder" to "Search loops...",
-            "guide_title" to "The Habit Loop Guide",
-            "guide_subtitle" to "Charles Duhigg's psychology cue loops focus on trigger automation.",
-            "guide_content_cue" to "Trigger",
-            "guide_content_cue_desc" to "The subconscious environmental cue that signals your brain to start.",
-            "guide_content_action" to "Routine",
-            "guide_content_action_desc" to "The immediate habit reaction you execute after the environmental signal.",
-            "guide_content_reward" to "Reward",
-            "guide_content_reward_desc" to "The physical or chemical micro-dopamine payoff sealing your loop.",
+            "guide_title" to "How Habits Work",
+            "guide_subtitle" to "Our habits are built around simple loops: Trigger, Action, and Reward.",
+            "guide_content_cue" to "1. The Trigger (Cue)",
+            "guide_content_cue_desc" to "The visual, physical, or environmental signal that tells you it's time to start.",
+            "guide_content_action" to "2. The Action (Routine)",
+            "guide_content_action_desc" to "The positive action or ritual you perform after the trigger.",
+            "guide_content_reward" to "3. The Reward",
+            "guide_content_reward_desc" to "The warm feeling or treat that makes your brain want to do it again.",
             "guide_dismiss" to "I Understand",
-            "form_title" to "Formulate Habit Loop",
-            "domain_title" to "Life Domain Target",
-            "cadence_title" to "Trigger Cadence Schedule",
-            "formula_sentence" to "Charles Duhigg's habit loop structure:\n\"When I [Cue], I will [Routine] to enjoy [Reward].\"",
-            "routine_label" to "When I... (Cue Trigger)",
-            "routine_placeholder" to "e.g. sit down at my desk",
-            "action_label" to "I will... (Heuristic Routine)",
-            "action_placeholder" to "e.g. write 100 words of journal",
-            "reward_label" to "To enjoy... (Dopamine Reward)",
-            "reward_placeholder" to "e.g. a hot cup of black tea",
-            "fields_error" to "Please complete all parts of the Habit Loop.",
-            "formulate_habit" to "Instantiate Habit Loop",
-            "edit_dialog_title" to "Refine Habit Loop",
-            "edit_dialog_subtitle" to "Heuristic Routine Title (Read-Only)",
-            "edit_dialog_error" to "Cue and Reward fields are required description elements.",
-            "save_changes" to "Save Description Changes",
-            "share_copied" to "AuraByte receipt copied to clipboard!",
-            "empty_title" to "No Habit Loops Formulated",
-            "empty_desc" to "AuraByte operates on Charles Duhigg's cue system. Formulate your first loop to start tracking.",
-            "empty_btn" to "Formulate Habit Loop",
+            "form_title" to "Build a New Habit Loop",
+            "domain_title" to "Life Area Focus",
+            "cadence_title" to "How Often (Cadence)",
+            "formula_sentence" to "A proven way to build a habit:\n\"When I [Trigger], I will do [Action] to enjoy [Reward].\"",
+            "routine_label" to "When I... (The Trigger)",
+            "routine_placeholder" to "e.g. sit at my desk, wake up, finish lunch",
+            "action_label" to "I will... (The Action)",
+            "action_placeholder" to "e.g. write 100 words of journal, drink water",
+            "reward_label" to "To enjoy... (The Reward)",
+            "reward_placeholder" to "e.g. a hot cup of tea, a mindful deep breath",
+            "fields_error" to "Please fill in all blanks to construct your positive loop.",
+            "formulate_habit" to "Create My Habit Loop",
+            "edit_dialog_title" to "Update My Habit Loop",
+            "edit_dialog_subtitle" to "The Action (Immutable)",
+            "edit_dialog_error" to "Please fill out both the trigger and reward fields.",
+            "save_changes" to "Save Options",
+            "share_copied" to "AuraByte progress copied to clipboard!",
+            "empty_title" to "Your Habit Journey Starts Here",
+            "empty_desc" to "You haven't built any habit loops yet. Let's construct a simple trigger, action, and reward to get going!",
+            "empty_btn" to "Create My First Loop",
             "footer_author" to "Ankit Sudegora",
-            "footer_by" to "Developed by Gemini and Ankit ♥️",
-            "footer_ver" to "v2.0.0 (Global Play Store Release)"
+            "footer_by" to "Developed with Gemini and Ankit ♥️",
+            "footer_ver" to "v2.0.0 (Global Play Store Release)",
+            "domain_dashboard_title" to "My Daily Balance across Life Areas",
+            "realtime_indicator" to "Updated Live",
+            "heatwave_dashboard_title" to "My Personal Consistency Tracker",
+            "filter_week" to "Week",
+            "filter_month" to "Month",
+            "filter_year" to "Year",
+            "status_starting" to "Starting out",
+            "status_growing" to "Getting consistent",
+            "status_thriving" to "Thriving!"
         ),
         AppLanguage.SPANISH to mapOf(
             "app_title" to "AuraByte",
-            "app_subtitle" to "El constructor de bucles de hábitos",
+            "app_subtitle" to "Tu compañero para crear hábitos positivos",
             "share_text" to "Compartir logros",
-            "share_progress" to "¡Éxito compartido en AuraByte!",
-            "all_categories" to "Todos los dominios",
+            "share_progress" to "¡Celebrando mi progreso diario!",
+            "all_categories" to "Todas las áreas",
             "search_placeholder" to "Buscar bucles...",
-            "guide_title" to "Guía del Bucle de Hábitos",
-            "guide_subtitle" to "Los bucles basados en la psicología de Charles Duhigg automatizan los disparadores.",
-            "guide_content_cue" to "Señal",
-            "guide_content_cue_desc" to "El disparador ambiental subconsciente que indica a tu cerebro comenzar.",
-            "guide_content_action" to "Rutina",
-            "guide_content_action_desc" to "La reacción de hábito inmediata que ejecutas tras la señal ambiental.",
-            "guide_content_reward" to "Recompensa",
-            "guide_content_reward_desc" to "La recompensa de micro-dopamina física o química que sella tu bucle.",
+            "guide_title" to "Cómo funcionan los hábitos",
+            "guide_subtitle" to "Nuestros hábitos se construyen con tres pasos simples: Señal, Rutina y Recompensa.",
+            "guide_content_cue" to "1. La Señal",
+            "guide_content_cue_desc" to "El aviso visual, físico o ambiental que te indica cuándo comenzar.",
+            "guide_content_action" to "2. La Rutina",
+            "guide_content_action_desc" to "La acción positiva o actividad que realizas tras la señal.",
+            "guide_content_reward" to "3. La Recompensa",
+            "guide_content_reward_desc" to "La sensación agradable que hace que quieras repetirlo mañana.",
             "guide_dismiss" to "Entendido",
-            "form_title" to "Formular Bucle de Hábito",
-            "domain_title" to "Objetivo del Dominio de Vida",
-            "cadence_title" to "Frecuencia del Disparador",
-            "formula_sentence" to "Estructura del bucle de hábito de Charles Duhigg:\n\"Cuando yo [Señal], haré [Rutina] para disfrutar [Recompensa].\"",
-            "routine_label" to "Cuando yo... (Señal Disparadora)",
-            "routine_placeholder" to "ej. me siente en mi escritorio",
-            "action_label" to "Haré... (Rutina Heurística)",
-            "action_placeholder" to "ej. escribir 100 palabras en mi diario",
-            "reward_label" to "Para disfrutar... (Recompensa de Dopamina)",
-            "reward_placeholder" to "ej. una taza caliente de té negro",
-            "fields_error" to "Por favor complete todas las partes del bucle de hábito.",
-            "formulate_habit" to "Instanciar Bucle de Hábito",
-            "edit_dialog_title" to "Refinar Bucle de Hábito",
-            "edit_dialog_subtitle" to "Título de la Rutina Heurística (Leer únicamente)",
-            "edit_dialog_error" to "Los campos de Señal y Recompensa son obligatorios.",
-            "save_changes" to "Guardar Cambios de Descripción",
-            "share_copied" to "¡Recibo de AuraByte copiado al portapapeles!",
-            "empty_title" to "No hay bucles de hábito registrados",
-            "empty_desc" to "AuraByte funciona según el sistema de señales de Charles Duhigg. Formula tu primer bucle para comenzar.",
-            "empty_btn" to "Formular Bucle de Hábito",
+            "form_title" to "Crear un Bucle de Hábito",
+            "domain_title" to "Área de enfoque",
+            "cadence_title" to "¿Con qué frecuencia?",
+            "formula_sentence" to "Una forma sencilla de crear un hábito:\n\"Cuando yo [Señal], haré [Rutina] y disfrutaré [Recompensa].\"",
+            "routine_label" to "Cuando yo... (La Señal/Disparador)",
+            "routine_placeholder" to "ej. me despierte, termine de almorzar",
+            "action_label" to "Haré... (La Acción)",
+            "action_placeholder" to "ej. tomo un vaso de agua, escribo mis metas",
+            "reward_label" to "Para disfrutar... (La Recompensa)",
+            "reward_placeholder" to "ej. un momento de descanso, un café rico",
+            "fields_error" to "Por favor complete todos los campos para crear su hábito.",
+            "formulate_habit" to "¡Crear mi hábito!",
+            "edit_dialog_title" to "Actualizar mi hábito",
+            "edit_dialog_subtitle" to "La Acción (Solo lectura)",
+            "edit_dialog_error" to "Por favor complete los campos de Señal y Recompensa.",
+            "save_changes" to "Guardar Cambios",
+            "share_copied" to "¡Progreso de AuraByte copiado al portapapeles!",
+            "empty_title" to "Tu viaje de hábitos comienza aquí",
+            "empty_desc" to "No has creado hábitos todavía. ¡Vamos a crear tu primera rutina positiva!",
+            "empty_btn" to "Crear mi primer hábito",
             "footer_author" to "Ankit Sudegora",
-            "footer_by" to "Desarrollado por Gemini y Ankit ♥️",
-            "footer_ver" to "v2.0.0 (Lanzamiento Global en Play Store)"
+            "footer_by" to "Desarrollado con Gemini y Ankit ♥️",
+            "footer_ver" to "v2.0.0 (Lanzamiento Global en Play Store)",
+            "domain_dashboard_title" to "Mi Equilibrio Diario por Áreas",
+            "realtime_indicator" to "En vivo",
+            "heatwave_dashboard_title" to "Mi Registro de Consistencia",
+            "filter_week" to "Semana",
+            "filter_month" to "Mes",
+            "filter_year" to "Año",
+            "status_starting" to "Iniciando",
+            "status_growing" to "Construyendo",
+            "status_thriving" to "¡Excelente!"
         ),
         AppLanguage.HINDI to mapOf(
             "app_title" to "AuraByte",
-            "app_subtitle" to "आदत लूप निर्माता",
+            "app_subtitle" to "आदत निर्माण में आपका सच्चा साथी",
             "share_text" to "रसीद साझा करें",
-            "share_progress" to "AuraByte पर सफलता साझा की!",
-            "all_categories" to "सभी श्रेणियां",
+            "share_progress" to "मेरी दैनिक सफलता साझा की जा रही है!",
+            "all_categories" to "सभी जीवन क्षेत्र",
             "search_placeholder" to "खोजें...",
-            "guide_title" to "आदत लूप गाइड",
-            "guide_subtitle" to "चार्ल्स डुहिग के आदत मनोविज्ञान के अनुसार हर कार्य एक ट्रिगर से शुरू होता है।",
-            "guide_content_cue" to "संकेत (Cue)",
-            "guide_content_cue_desc" to "वह अवचेतन पर्यावरणीय इशारा जो आपके मस्तिष्क को शुरू करने का संकेत देता है।",
-            "guide_content_action" to "दिनचर्या (Routine)",
-            "guide_content_action_desc" to "संकेत मिलने के तुरंत बाद की जाने वाली आदत की क्रिया।",
-            "guide_content_reward" to "पुरस्कार (Reward)",
-            "guide_content_reward_desc" to "प्रसन्नता का वह अनुभव (डोपामाइन) जो इस लूप को मस्तिष्क में मजबूत करता है।",
+            "guide_title" to "आदतें कैसे काम करती हैं",
+            "guide_subtitle" to "हमारी आदतें तीन सरल चरणों से बनती हैं: संकेत, आदत और पुरस्कार।",
+            "guide_content_cue" to "1. संकेत (Trigger)",
+            "guide_content_cue_desc" to "वह इशारा जो आपको शुरू करने के लिए संकेत देता है।",
+            "guide_content_action" to "2. कार्य (Action)",
+            "guide_content_action_desc" to "वह सकारात्मक क्रिया या आदत जो आप संकेत के बाद करते हैं।",
+            "guide_content_reward" to "3. पुरस्कार (Reward)",
+            "guide_content_reward_desc" to "वह मनपसंद अनुभव जो आपके मस्तिष्क को इसे दोहराने के लिए प्रेरित करता है।",
             "guide_dismiss" to "समझ गया",
-            "form_title" to "आदत लूप बनाएं",
-            "domain_title" to "जीवन क्षेत्र का लक्ष्य",
-            "cadence_title" to "ट्रिगर आवृत्ति शिड्यूल",
-            "formula_sentence" to "चार्ल्स डुहिग आदत लूप संरचना:\n\"जब मैं [संकेत] करूंगा, तब मैं [दिनचर्या] करूंगा ताकि मुझे [पुरस्कार] मिले।\"",
-            "routine_label" to "जब मैं... (संकेत)",
-            "routine_placeholder" to "जैसे: जब मैं डेस्क पर बैठूंगा",
-            "action_label" to "मैं करूंगा... (दिनचर्या)",
-            "action_placeholder" to "जैसे: रोज़ डायरी के 100 शब्द लिखूंगा",
+            "form_title" to "एक नई आदत का ढांचा बनाएं",
+            "domain_title" to "जीवन क्षेत्र",
+            "cadence_title" to "कितनी बार (Cadence)",
+            "formula_sentence" to "आदत बनाने का एक आसान तरीका:\n\"जब मैं [संकेत] देखूंगा, तब मैं [कार्य] करूंगा ताकि मुझे [पुरस्कार] मिले।\"",
+            "routine_label" to "जब मैं... (संकेत/इशारा)",
+            "routine_placeholder" to "जैसे: सुबह उठते ही, खाना खाने के बाद",
+            "action_label" to "मैं करूंगा... (मुख्य आदत)",
+            "action_placeholder" to "जैसे: पानी पीऊंगा, डायरी लिखूंगा",
             "reward_label" to "ताकि आनंद मिले... (पुरस्कार)",
-            "reward_placeholder" to "जैसे: गर्म कड़क चाय का कप",
+            "reward_placeholder" to "जैसे: एक कप चाय, थोड़ा विश्राम",
             "fields_error" to "कृपया आदत लूप के सभी हिस्सों को पूरा करें।",
-            "formulate_habit" to "आदत का सृजन करें",
-            "edit_dialog_title" to "आदत लूप को बदलें",
+            "formulate_habit" to "मेरी आदत बनाएं!",
+            "edit_dialog_title" to "आदत को बदलें",
             "edit_dialog_subtitle" to "दिनचर्या शीर्षक (केवल पढ़ने के लिए)",
             "edit_dialog_error" to "संकेत और पुरस्कार विवरण बदलना आवश्यक हैं।",
             "save_changes" to "विवरण सहेजें",
             "share_copied" to "AuraByte रिपोर्ट क्लिपबोर्ड पर कॉपी की गई!",
-            "empty_title" to "कोई आदत पंजीकृत नहीं है",
-            "empty_desc" to "AuraByte चार्ल्स डुहिग के संकेत सिद्धांत पर कार्य करता है। नए आदत लूप से शुरुआत करें।",
-            "empty_btn" to "आदत लूप तैयार करें",
+            "empty_title" to "आपकी आदत यात्रा यहाँ से शुरू होती है",
+            "empty_desc" to "आपने अभी तक कोई आदत नहीं बनाई है। चलिए शुरुआत करते हैं!",
+            "empty_btn" to "पहल करें",
             "footer_author" to "Ankit Sudegora",
             "footer_by" to "Gemini और Ankit ♥️ द्वारा विकसित",
-            "footer_ver" to "v2.0.0 (ग्लोबल प्ले स्टोर रिलीज)"
+            "footer_ver" to "v2.0.0 (ग्लोबल प्ले स्टोर रिलीज)",
+            "domain_dashboard_title" to "जीवन के क्षेत्रों में मेरा संतुलन",
+            "realtime_indicator" to "लाइव अपडेट",
+            "heatwave_dashboard_title" to "मेरी निरंतरता (Consistency)",
+            "filter_week" to "सप्ताह",
+            "filter_month" to "माह",
+            "filter_year" to "वर्ष",
+            "status_starting" to "शुरुआत",
+            "status_growing" to "बेहतर हो रहा है",
+            "status_thriving" to "शानदार!"
         ),
         AppLanguage.GERMAN to mapOf(
             "app_title" to "AuraByte",
-            "app_subtitle" to "Der Gewohnheitsschleifen-Konstrukteur",
+            "app_subtitle" to "Ihr Partner für positive Gewohnheiten",
             "share_text" to "Erfolge teilen",
-            "share_progress" to "Erfolge auf AuraByte geteilt!",
-            "all_categories" to "Alle Bereiche",
+            "share_progress" to "Tägliche Erfolge geteilt!",
+            "all_categories" to "Alle Lebensbereiche",
             "search_placeholder" to "Schleifen durchsuchen...",
-            "guide_title" to "Gewohnheitsschleifen-Anleitung",
-            "guide_subtitle" to "Die psychobasierte Gewohnheitsschleife nach Charles Duhigg automatisiert Ihre Trigger.",
-            "guide_content_cue" to "Auslöser",
-            "guide_content_cue_desc" to "Der unbewusste Umweltreiz, der Ihrem Gehirn signalisiert, zu starten.",
-            "guide_content_action" to "Routine",
-            "guide_content_action_desc" to "Die unmittelbare Gewohnheitsreaktion, die Sie nach dem Signal ausführen.",
-            "guide_content_reward" to "Belohnung",
-            "guide_content_reward_desc" to "Die physische oder chemische Dopamin-Auszahlung, die Ihre Schleife festigt.",
+            "guide_title" to "Gewohnheiten verstehen",
+            "guide_subtitle" to "Gewohnheiten basieren auf drei einfachen Schritten: Auslöser, Routine und Belohnung.",
+            "guide_content_cue" to "1. Der Auslöser",
+            "guide_content_cue_desc" to "Das Signal aus Ihrem Alltag, das Ihnen anzeigt, wann Sie starten sollen.",
+            "guide_content_action" to "2. Die Routine",
+            "guide_content_action_desc" to "Die positive Handlung, die Sie direkt nach dem Signal ausführen.",
+            "guide_content_reward" to "3. Die Belohnung",
+            "guide_content_reward_desc" to "Die kleine Belohnung, die Ihrem Gehirn Freude bereitet.",
             "guide_dismiss" to "Verstanden",
-            "form_title" to "Gewohnheitsschleife formulieren",
-            "domain_title" to "Lebensbereich-Ziel",
-            "cadence_title" to "Häufigkeit des Triggers",
-            "formula_sentence" to "Gewohnheitsschleife nach Charles Duhigg:\n\"Wenn ich [Auslöser], werde ich [Routine], um [Belohnung] zu genießen.\"",
-            "routine_label" to "Wenn ich... (Auslöser)",
-            "routine_placeholder" to "z.B. mich an den Schreibtisch setze",
-            "action_label" to "Werde ich... (Routine)",
-            "action_placeholder" to "z.B. 100 Wörter im Tagebuch schreiben",
-            "reward_label" to "Um zu genießen... (Belohnung)",
-            "reward_placeholder" to "z.B. eine heiße Tasse schwarzen Tee",
-            "fields_error" to "Bitte füllen Sie alle Teile der Gewohnheitsschleife aus.",
-            "formulate_habit" to "Gewohnheitsschleife aktivieren",
-            "edit_dialog_title" to "Schleife anpassen",
-            "edit_dialog_subtitle" to "Routine-Titel (Schreibgeschützt)",
-            "edit_dialog_error" to "Auslöser und Belohnung sind erforderliche Beschreibungsfelder.",
-            "save_changes" to "Änderungen speichern",
+            "form_title" to "Neue Gewohnheit erstellen",
+            "domain_title" to "Fokus-Lebensbereich",
+            "cadence_title" to "Wie oft?",
+            "formula_sentence" to "So einfach klappt es:\n\"Wenn ich [Auslöser], werde ich [Routine], um mich mit [Belohnung] zu belohnen.\"",
+            "routine_label" to "Wenn ich... (Der Auslöser)",
+            "routine_placeholder" to "z.B. morgens aufwache, aufstehe",
+            "action_label" to "Werde ich... (Die Routine)",
+            "action_placeholder" to "z.B. ein Glas Wasser trinken",
+            "reward_label" to "Belohnung... (Die Belohnung)",
+            "reward_placeholder" to "z.B. tiefer Atemzug frischer Luft",
+            "fields_error" to "Bitte füllen Sie alle Felder aus.",
+            "formulate_habit" to "Gewohnheit erstellen",
+            "edit_dialog_title" to "Gewohnheit anpassen",
+            "edit_dialog_subtitle" to "Routine (Schreibgeschützt)",
+            "edit_dialog_error" to "Auslöser und Belohnung sind erforderlich.",
+            "save_changes" to "Speichern",
             "share_copied" to "AuraByte-Beleg in die Zwischenablage kopiert!",
-            "empty_title" to "Keine Gewohnheiten registriert",
-            "empty_desc" to "AuraByte basiert auf dem Charles-Duhigg-Signalsystem. Erstellen Sie Ihre erste Schleife.",
-            "empty_btn" to "Schleife formulieren",
+            "empty_title" to "Ihre Gewohnheits-Reise beginnt hier",
+            "empty_desc" to "Sie haben noch keine Gewohnheiten erstellt. Fangen wir an!",
+            "empty_btn" to "Erste Gewohnheit erstellen",
             "footer_author" to "Ankit Sudegora",
-            "footer_by" to "Entwickelt von Gemini und Ankit ♥️",
-            "footer_ver" to "v2.0.0 (Global Play Store Release)"
+            "footer_by" to "Entwickelt mit Gemini und Ankit ♥️",
+            "footer_ver" to "v2.0.0 (Global Play Store Release)",
+            "domain_dashboard_title" to "Meine Balance im Leben",
+            "realtime_indicator" to "Live aktualisiert",
+            "heatwave_dashboard_title" to "Meine Beständigkeit",
+            "filter_week" to "Woche",
+            "filter_month" to "Monat",
+            "filter_year" to "Jahr",
+            "status_starting" to "Aller Anfang",
+            "status_growing" to "Stabilisiert",
+            "status_thriving" to "Hervorragend!"
         ),
         AppLanguage.JAPANESE to mapOf(
             "app_title" to "AuraByte",
-            "app_subtitle" to "習慣ループ・コンストラクター",
+            "app_subtitle" to "習慣づくりのための頼れるサポーター",
             "share_text" to "実績を共有",
-            "share_progress" to "AuraByteで目標達成を共有しました！",
-            "all_categories" to "全ライフドメイン",
-            "search_placeholder" to "習慣ループを検索...",
-            "guide_title" to "習慣ループガイド",
-            "guide_subtitle" to "習慣を自動化するためのきっかけと報酬を設定します。",
-            "guide_content_cue" to "きっかけ (Cue)",
-            "guide_content_cue_desc" to "脳に習慣の開始を知らせる、無意識の環境的な合図。",
-            "guide_content_action" to "行動 (Routine)",
-            "guide_content_action_desc" to "合図の直後に自動的に実行する習慣アクション。",
-            "guide_content_reward" to "報酬 (Reward)",
-            "guide_content_reward_desc" to "脳にそのループを定着させる、微量なドーパミンのご褒美。",
+            "share_progress" to "今日の成果を共有しました！",
+            "all_categories" to "すべてのライフエリア",
+            "search_placeholder" to "習慣検索...",
+            "guide_title" to "習慣づくりの基本",
+            "guide_subtitle" to "習慣は「きっかけ」「行動」「ごほうび」の3つのシンプルなステップからできています。",
+            "guide_content_cue" to "1. きっかけ (きっかけ)",
+            "guide_content_cue_desc" to "行動を始める合図となる、日常のちょっとした出来事や環境の変化。",
+            "guide_content_action" to "2. 行動 (アクション)",
+            "guide_content_action_desc" to "合図のすぐ後に、あなたが取るポジティブな行動。",
+            "guide_content_reward" to "3. ごほうび (ごほうび)",
+            "guide_content_reward_desc" to "行動した後に感じる、心が温まるような嬉しいごほうび。",
             "guide_dismiss" to "了解しました",
-            "form_title" to "習慣ループの策定",
-            "domain_title" to "対象ライフドメイン",
-            "cadence_title" to "スケジュール頻度",
-            "formula_sentence" to "デュヒッグ方式習慣ループの公式:\n「私は【きっかけ】の時、【行動】を行い、【報酬】を得る。」",
-            "routine_label" to "私はのとき... (きっかけ)",
-            "routine_placeholder" to "例: デスクの椅子に座ったとき",
-            "action_label" to "を行います... (行動)",
-            "action_placeholder" to "例: 日記を100文字書く",
-            "reward_label" to "を得る目標... (報酬)",
-            "reward_placeholder" to "例: 温かい紅茶を飲む",
-            "fields_error" to "すべての習慣ループ項目を入力してください。",
-            "formulate_habit" to "習慣ループを生成する",
-            "edit_dialog_title" to "習慣ループの再編集",
-            "edit_dialog_subtitle" to "行動名 (読み取り専用)",
-            "edit_dialog_error" to "きっかけと報酬は編集可能な説明項目です。",
-            "save_changes" to "説明設定を保存",
+            "form_title" to "新しい習慣をつくる",
+            "domain_title" to "フォーカス分野",
+            "cadence_title" to "繰り返す頻度",
+            "formula_sentence" to "簡単な習慣づくりの公式:\n「【きっかけ】のとき、【行動】をして、【ごほうび】を楽しみます。」",
+            "routine_label" to "【きっかけ】のとき...",
+            "routine_placeholder" to "例: 朝起きたとき、食事を終えたとき",
+            "action_label" to "【行動】をします...",
+            "action_placeholder" to "例: お水を一杯飲む、3つの目標をメモする",
+            "reward_label" to "【ごほうび】を楽しみます...",
+            "reward_placeholder" to "例: 美味しいお茶を飲む、リフレッシュする",
+            "fields_error" to "すべての項目を入力してください。",
+            "formulate_habit" to "習慣をつくる！",
+            "edit_dialog_title" to "習慣の再編集",
+            "edit_dialog_subtitle" to "行動 (編集不可)",
+            "edit_dialog_error" to "きっかけとごほうびを入力してください。",
+            "save_changes" to "設定を保存",
             "share_copied" to "AuraByte実績をクリップボードにコピーしました！",
-            "empty_title" to "習慣ループが未登録です",
-            "empty_desc" to "AuraByteはチャールズ・デュヒッグ式トリガー構造を採用しています。最初のループを作ってみましょう。",
-            "empty_btn" to "習慣ループを策定",
+            "empty_title" to "習慣づくりの旅を始めましょう",
+            "empty_desc" to "まだ習慣が登録されていません。最初のハッピー習慣をつくってみませんか？",
+            "empty_btn" to "最初の習慣を作る",
             "footer_author" to "Ankit Sudegora",
             "footer_by" to "Gemini と Ankit ♥️ による開発",
-            "footer_ver" to "v2.0.0 (グローバル Playストア公開版)"
+            "footer_ver" to "v2.0.0 (グローバル Playストア公開版)",
+            "domain_dashboard_title" to "ライフエリアのバランス",
+            "realtime_indicator" to "リアルタイム更新",
+            "heatwave_dashboard_title" to "習慣の継続状況",
+            "filter_week" to "週",
+            "filter_month" to "月",
+            "filter_year" to "年",
+            "status_starting" to "はじめの一歩",
+            "status_growing" to "継続中",
+            "status_thriving" to "素晴らしい！"
         ),
         AppLanguage.PORTUGUESE to mapOf(
             "app_title" to "AuraByte",
-            "app_subtitle" to "O Construtor de Loops de Hábito",
+            "app_subtitle" to "Seu companheiro para construir hábitos positivos",
             "share_text" to "Compartilhar Progresso",
-            "share_progress" to "Progresso compartilhado no AuraByte!",
-            "all_categories" to "Todos os Domínios",
-            "search_placeholder" to "Buscar loops...",
-            "guide_title" to "Guia de Loops de Hábito",
-            "guide_subtitle" to "Loops psicológicos baseados em Charles Duhigg automatizam seus gatilhos.",
-            "guide_content_cue" to "Deixa",
-            "guide_content_cue_desc" to "O estímulo ambiental subconsciente que avisa seu cérebro para começar.",
-            "guide_content_action" to "Rotina",
-            "guide_content_action_desc" to "A reação imediata que você executa após o sinal do ambiente.",
-            "guide_content_reward" to "Recompensa",
-            "guide_content_reward_desc" to "A carga microquímica de dopamina que fixa a rotina no seu cérebro.",
+            "share_progress" to "Celebrando meu progresso diário!",
+            "all_categories" to "Todas as áreas da vida",
+            "search_placeholder" to "Buscar hábitos...",
+            "guide_title" to "Como os hábitos funcionam",
+            "guide_subtitle" to "Nossos hábitos são formados por três passos simples: Gatilho, Ação e Recompensa.",
+            "guide_content_cue" to "1. O Gatilho (Gatilho)",
+            "guide_content_cue_desc" to "O sinal do seu dia a dia que avisa ao seu cérebro que é hora de começar.",
+            "guide_content_action" to "2. A Ação (Rotina)",
+            "guide_content_action_desc" to "A ação ou ritual positivo que você realiza logo após o gatilho.",
+            "guide_content_reward" to "3. A Recompensa",
+            "guide_content_reward_desc" to "A sensação agradável que faz seu cérebro querer repetir a ação amanhã.",
             "guide_dismiss" to "Entendido",
-            "form_title" to "Construir Loop de Hábito",
-            "domain_title" to "Domínio de Foco",
-            "cadence_title" to "Frequência do Gatilho",
-            "formula_sentence" to "Estrutura descrita por Charles Duhigg:\n\"Quando eu [Deixa], farei [Rotina] para desfrutar [Recompensa].\"",
-            "routine_label" to "Quando eu... (Deixa do Hábito)",
-            "routine_placeholder" to "ex: sentar na minha mesa de trabalho",
-            "action_label" to "Farei... (Rotina Diária)",
-            "action_placeholder" to "ex: escrever 100 palavras no diário",
-            "reward_label" to "Para desfrutar... (Recompensa de Dopamina)",
-            "reward_placeholder" to "ex: uma xícara quente de chá preto",
-            "fields_error" to "Por favor, complete todas as partes do loop de hábito.",
-            "formulate_habit" to "Instanciar Loop de Hábito",
-            "edit_dialog_title" to "Refinar Loop de Hábito",
-            "edit_dialog_subtitle" to "Título da Rotina (Apenas Leitura)",
-            "edit_dialog_error" to "Deixa e Recompensa são campos descritivos necessários.",
-            "save_changes" to "Salvar Alterações de Descrição",
+            "form_title" to "Criar Novo Hábito",
+            "domain_title" to "Área de Foco",
+            "cadence_title" to "Com que frequência?",
+            "formula_sentence" to "Uma maneira simples de criar hábitos:\n\"Quando eu [Gatilho], farei [Ação] para desfrutar [Recompensa].\"",
+            "routine_label" to "Quando eu... (Gatilho)",
+            "routine_placeholder" to "ex: acordar pela manhã, terminar de almoçar",
+            "action_label" to "Farei... (A Ação)",
+            "action_placeholder" to "ex: tomar um copo de água, planejar meu dia",
+            "reward_label" to "Como recompensa... (Recompensa)",
+            "reward_placeholder" to "ex: tomar um bom chá, um minuto de descanso",
+            "fields_error" to "Por favor, complete todos os campos para iniciar.",
+            "formulate_habit" to "Criar meu hábito!",
+            "edit_dialog_title" to "Atualizar hábito",
+            "edit_dialog_subtitle" to "A Ação (Apenas leitura)",
+            "edit_dialog_error" to "Os campos de gatilho e recompensa são obrigatórios.",
+            "save_changes" to "Salvar alterações",
             "share_copied" to "Progresso do AuraByte copiado para o clipboard!",
-            "empty_title" to "Nenhum loop registrado",
-            "empty_desc" to "AuraByte opera na ciência de gatilhos de Charles Duhigg. Comece criando seu primeiro loop.",
-            "empty_btn" to "Construir Loop de Hábito",
+            "empty_title" to "Sua jornada de hábitos começa aqui",
+            "empty_desc" to "Você ainda não tem hábitos criados. Vamos criar seu primeiro hábito positivo!",
+            "empty_btn" to "Criar meu primeiro hábito",
             "footer_author" to "Ankit Sudegora",
-            "footer_by" to "Desenvolvido por Gemini e Ankit ♥️",
-            "footer_ver" to "v2.0.0 (Lanzamiento Global Google Play)"
+            "footer_by" to "Desenvolvido com Gemini e Ankit ♥️",
+            "footer_ver" to "v2.0.0 (Lanzamiento Global Google Play)",
+            "domain_dashboard_title" to "Meu Equilíbrio Diário por Áreas",
+            "realtime_indicator" to "Em tempo real",
+            "heatwave_dashboard_title" to "Meu Registro de Consistência",
+            "filter_week" to "Semana",
+            "filter_month" to "Mês",
+            "filter_year" to "Ano",
+            "status_starting" to "Começando",
+            "status_growing" to "Construindo",
+            "status_thriving" to "Excelente!"
         )
     )
 
