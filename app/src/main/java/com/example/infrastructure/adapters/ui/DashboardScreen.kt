@@ -140,42 +140,17 @@ fun DashboardScreen(
     // Category quick filter by domain
     var selectedFilterDomain by remember { mutableStateOf<LifeDomain?>(null) }
     
+    // Manage state for the customized social media share dialogue
+    var showShareDialog by remember { mutableStateOf(false) }
+    
     val context = LocalContext.current
     val clipboardManager = remember(context) {
         context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     }
 
-    // Function to copy a beautiful Daily Success Receipt to clipboard
+    // Function to show the beautiful Share Dialog
     val onShareAchievement = {
-        val totalHabits = uiState.habits.count { it.cadence.isApplicableOn(uiState.selectedDate) }
-        val completedMap = uiState.logs[uiState.selectedDate] ?: emptyMap()
-        val completedCount = uiState.habits.count { 
-            it.cadence.isApplicableOn(uiState.selectedDate) && completedMap[it.id] == true 
-        }
-        val percentage = if (totalHabits == 0) 0 else ((completedCount.toFloat() / totalHabits.toFloat()) * 100).toInt()
-        
-        val formatDay = getDayOfWeekLongName(uiState.selectedDate)
-        val checkListText = uiState.habits.filter { it.cadence.isApplicableOn(uiState.selectedDate) }
-            .joinToString("\n") { habit ->
-                val isCompleted = completedMap[habit.id] == true
-                val statusBox = if (isCompleted) "✅ [OK]" else "⬜ [  ]"
-                " $statusBox ${habit.domain.displayName}: ${habit.routineText} (${habit.cadence.displayName})"
-            }
-            
-        val receiptText = """
-🏆 AURA BYTE - Daily Success Summary 🏆
-📅 Date: $formatDay
-📊 Progress: $completedCount / $totalHabits ($percentage%)
---------------------------------------------
-$checkListText
---------------------------------------------
-Consistently developed by Gemini and Ankit ♥️
-🚀 AuraByte: Charles Duhigg Habit Loop Tracker.
-        """.trimIndent()
-        
-        val clip = ClipData.newPlainText("AuraByte Progress", receiptText)
-        clipboardManager.setPrimaryClip(clip)
-        Toast.makeText(context, Localizations.get(selectedLanguage, "share_toast"), Toast.LENGTH_SHORT).show()
+        showShareDialog = true
     }
 
     // Track dates to display in horizontal tester
@@ -951,6 +926,14 @@ Consistently developed by Gemini and Ankit ♥️
                 showTutorialGuide = showTutorialGuide,
                 onToggleTutorialGuide = { showTutorialGuide = it },
                 onDismiss = { showSettingsAndFaq = false }
+            )
+        }
+
+        if (showShareDialog) {
+            ShareProgressDialog(
+                uiState = uiState,
+                selectedLanguage = selectedLanguage,
+                onDismiss = { showShareDialog = false }
             )
         }
     }
@@ -3460,6 +3443,517 @@ fun SettingsAndFaqDialog(
     }
 }
 
+// Function to calculate consecutive days with at least one completion
+fun calculateCurrentStreak(logs: Map<String, Map<String, Boolean>>, selectedDate: String): Int {
+    if (logs.isEmpty()) return 0
+    val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+    val cal = java.util.Calendar.getInstance()
+    
+    val curDate = try {
+        sdf.parse(selectedDate) ?: java.util.Date()
+    } catch(e: Exception) {
+        java.util.Date()
+    }
+    cal.time = curDate
+    
+    var streak = 0
+    var dateStr = sdf.format(cal.time)
+    
+    for (i in 0..1000) {
+        val dayCompletions = logs[dateStr] ?: emptyMap()
+        val hasCompletion = dayCompletions.values.any { it == true }
+        
+        if (hasCompletion) {
+            streak++
+            cal.add(java.util.Calendar.DATE, -1)
+            dateStr = sdf.format(cal.time)
+        } else {
+            if (i == 0) {
+                cal.add(java.util.Calendar.DATE, -1)
+                dateStr = sdf.format(cal.time)
+                val yesterdayCompletions = logs[dateStr] ?: emptyMap()
+                val hasYesterdayCompletion = yesterdayCompletions.values.any { it == true }
+                if (hasYesterdayCompletion) {
+                    streak++
+                    cal.add(java.util.Calendar.DATE, -1)
+                    dateStr = sdf.format(cal.time)
+                    continue
+                }
+            }
+            break
+        }
+    }
+    return streak
+}
+
+private fun getInstagramTemplate(percentage: Int, streak: Int, url: String, lang: AppLanguage): String {
+    val nonZeroStreak = if (streak > 0) streak else 1
+    return when (lang) {
+        AppLanguage.SPANISH -> "Bytes de disciplina, bloque a bloque. 🚀 Equilibrando mis 4 cuadrantes con AuraByte de la psicología de bucle de Charles Duhigg. Sin fricción, pura ejecución. ⚡️\n\n📊 Nivel diario: $percentage% completado\n🔥 Racha Heatwave: $nonZeroStreak días\n\nOptimiza tu rutina diaria y equilibra tu vida de forma offline: $url\n\n#AuraByte #BucleDeHabitos #Productividad #Disciplina #Desarrolladores"
+        AppLanguage.HINDI -> "अनुशासन के बाइट्स, ब्लॉक दर ब्लॉक। 🚀 आज मैंने चार्ल्स डुहिंग के हैबिट लूप की मदद से अपने जीवन के ४ क्षेत्रों को संतुलित किया। कोई बहाना नहीं, सिर्फ फोकस। ⚡️\n\n📊 दैनिक स्तर: $percentage% पूरा हुआ\n🔥 हीटवेव स्ट्रीक: $nonZeroStreak दिन\n\nअपने रूटीन को अपग्रेड करें और जीवन में संतुलन पाएं: $url\n\n#AuraByte #HabitLoop #SelfDiscipline #Focus #HindiDevs"
+        AppLanguage.GERMAN -> "Disziplin-Bytes, Stein für Stein. 🚀 Heute habe ich meine 4 Lebensquadranten mit AuraByte nach der Gewohnheitspsychologie von Charles Duhigg ausbalanciert. Keine Ausreden, nur Ausführung. ⚡️\n\n📊 Tages-Level: $percentage% abgeschlossen\n🔥 Heatwave-Serie: $nonZeroStreak Tage\n\nOptimiere deine Routinen und bringe Balance in dein Leben: $url\n\n#AuraByte #HabitLoop #Produktivität #Disziplin #DevLife"
+        AppLanguage.JAPANESE -> "規律の積み重ね、1日1歩。🚀 チャールズ・デュヒッグ式習慣ループを活用して、AuraByteで人生の4つの柱のバランスを整えました。摩擦ゼロ、圧倒的実行力。⚡️\n\n📊 今日のフォーカス率: $percentage% 達成\n🔥 継続の熱量（Heatwave）: $nonZeroStreak 日連続\n\n習慣ルーティンワークスペースを最適化しましょう。AuraByteをダウンロード: $url\n\n#AuraByte #習慣ループ #ハック #自己管理 #デベロッパー"
+        AppLanguage.PORTUGUESE -> "Bytes de disciplina, bloco por bloco. 🚀 Equilibrei meus 4 quadrantes de vida hoje com o AuraByte, baseado no loop de hábitos de Charles Duhigg. Sem desculpas, apenas execução. ⚡️\n\n📊 Nível diário: $percentage% concluído\n🔥 Streak de calor (Heatwave): $nonZeroStreak dias\n\nTurbine seus hábitos e equilibre sua vida: $url\n\n#AuraByte #LoopDeHabitos #Foco #Produtividade #Devs"
+        else -> "Bytes of discipline, block by block. 🚀 Managed my 4 life quadrants today with AuraByte of Charles Duhigg behavior loops. No friction, just pure execution. ⚡️\n\n📊 Daily level: $percentage% completed\n🔥 Heatwave Streak: $nonZeroStreak days\n\nCheck out my routine workspace and balance your life. Download AuraByte at: $url\n\n#AuraByte #HabitLoop #DevDiscipline #BuildingInPublic #Productivity"
+    }
+}
+
+private fun getWhatsappTemplate(percentage: Int, streak: Int, date: String, completedList: String, url: String, lang: AppLanguage): String {
+    val nonZeroStreak = if (streak > 0) streak else 1
+    return when (lang) {
+        AppLanguage.SPANISH -> "🏆 *AuraByte | Mi Progreso de Hábitos* 🏆\n📅 *Fecha*: $date\n🔥 *Racha actual*: $nonZeroStreak Días\n📊 *Nivel de enfoque*: $percentage%\n\n*Cuadrantes completados hoy:*\n$completedList\n\nManteniéndome firme con el bucle de hábitos de Charles Duhigg. \n⚡️ Construye hábitos permanentes sin anuncios y 100% offline.\n🔗 Descarga AuraByte aquí: $url"
+        AppLanguage.HINDI -> "🏆 *AuraByte | मेरी आदतों का प्रोग्रेस* 🏆\n📅 *दिनांक*: $date\n🔥 *वर्तमान स्ट्रीक*: $nonZeroStreak दिन\n📊 *दैनिक फोकस लेवल*: $percentage%\n\n*आज पूरे किए गए क्षेत्र:*\n$completedList\n\nचार्ल्स डुहिंग के हैबिट लूप आर्किटेक्चर के साथ निरंतर बने रहें।\n⚡️ बिना विज्ञापनों और बिना इंटरनेट के अपनी आदतें सुधारें।\n🔗 AuraByte प्राप्त करें: $url"
+        AppLanguage.GERMAN -> "🏆 *AuraByte | Mein Gewohnheits-Fortschritt* 🏆\n📅 *Datum*: $date\n🔥 *Aktuelle Serie*: $nonZeroStreak Tage\n📊 *Fokus-Level heute*: $percentage%\n\n*Meine abgeschlossenen Quadranten:*\n$completedList\n\nKonsequentes Tracking durch Charles Duhiggs Verhaltensarchitektur. \n⚡️ Baue dauerhafte Gewohnheiten auf – werbefrei und offline.\n🔗 AuraByte herunterladen unter: $url"
+        AppLanguage.JAPANESE -> "🏆 *AuraByte | 今日の習慣ログ* 🏆\n📅 *日程*: $date\n🔥 *継続日数（Streak）*: $nonZeroStreak 日連続\n📊 *今日のフォーカス度*: $percentage%\n\n*本日クリアした領域:*\n$completedList\n\n脳心理学に基づいたハックで日常を圧倒的自動化。\n⚡️ 広告なし・完全オフライン・究極のプライベート習慣トラッカー。\n🔗 AuraByte を今すぐ入手: $url"
+        AppLanguage.PORTUGUESE -> "🏆 *AuraByte | Meu Progresso de Hábitos* 🏆\n📅 *Data*: $date\n🔥 *Streak atual*: $nonZeroStreak Dias\n📊 *Nível de Foco*: $percentage%\n\n*Quadrantes concluídos hoje:*\n$completedList\n\nMantendo a consistência pelo método comportamental de Charles Duhigg.\n⚡️ Crie rotinas permanentes sem comerciais e 100% offline.\n🔗 Baixe o AuraByte em: $url"
+        else -> "🏆 *AuraByte | My Habit Loop Progress* 🏆\n📅 *Date*: $date\n🔥 *Current Streak*: $nonZeroStreak Days\n📊 *Today's Focus Level*: $percentage%\n\n*My Completed Quadrants today:*\n$completedList\n\nConsistently tracking via Charles Duhigg behavioral architecture. \n⚡️ Start building habits that stick. No ads, fully offline, private. \n🔗 Get AuraByte at: $url"
+    }
+}
+
+private fun getFacebookTemplate(percentage: Int, streak: Int, url: String, lang: AppLanguage): String {
+    val nonZeroStreak = if (streak > 0) streak else 1
+    return when (lang) {
+        AppLanguage.SPANISH -> "La constancia es la ventaja competitiva definitiva. Hoy logré completar el $percentage% de mis rutinas de hábito en AuraByte, equilibrando los cuatro cuadrantes clave de la vida: Salud, Profesional, Personal y Familia.\n\nCon $nonZeroStreak días consecutivos de ejecución enfocada (Heatwave 🔥), compruebo que los bucles de comportamiento correctos generan cambios a largo plazo. Sin atajos, solo crecimiento compuesto.\n\n¿Qué estás ejecutando hoy? 💡\nOptimiza tu vida offline de manera privada y sin anuncios: $url"
+        AppLanguage.HINDI -> "निरंतरता ही सबसे बड़ी ताकत है। आज मैंने AuraByte की मदद से अपने चारों प्रमुख जीवन स्तंभों (स्वास्थ्य, पेशेवर, व्यक्तिगत और परिवार) में संतुलन बनाते हुए $percentage% काम पूरा किया।\n\nलगातार $nonZeroStreak दिनों के फोकस्ड काम (Heatwave 🔥) के साथ, मैं साबित कर रहा हूँ कि सही हैबिट लूप दीर्घकालिक परिणाम देते हैं। कोई शार्टकट नहीं, सिर्फ रोज़ाना की प्रगति।\n\nआप आज क्या शुरू कर रहे हैं? 💡\nअपने जीवन को पूरी तरह ऑफलाइन और विज्ञापन-मुक्त सुरक्षित रूप से संतुलित करें: $url"
+        AppLanguage.GERMAN -> "Beständigkeit ist der ultimative Wettbewerbsvorteil. Heute habe ich $percentage% meiner Gewohnheitsroutinen mit AuraByte erreicht und meine Fortschritte in den vier entscheidenden Lebensquadranten verfolgt: Gesundheit, Beruf, Persönlich und Familie.\n\nMit $nonZeroStreak aufeinanderfolgenden Tagen fokussierter Ausführung (Heatwave 🔥) beweise ich, dass ehrliche Verhaltensschleifen langfristige Systeme aufbauen. Kein schneller Hack, nur Zinseszins-Wachstum.\n\nWas setzt du heute um? 💡\nBringe Struktur in deinen Tag – offline, sicher und werbefrei: $url"
+        AppLanguage.JAPANESE -> "「継続」こそが、人生における究極の競争優位性です。今日、AuraByteのルーティンワークスペースを活用して、健康、仕事、個人、家族という「人生の4つの重要な柱」のタスクを $percentage% クリアしました。\n\n$nonZeroStreak 日間連続でフォーカス（Heatwave 🔥）を実行したことで、正しい行動ループが長期的な習慣システムを構築することを証明しています。奇をてらわず、毎日の複利の力を信じるインクリメンタルな成長。\n\nあなたは今日、何を実行しますか？ 💡\nオフライン＆プライベートで、気を散らさずに最高の1日を設計しましょう: $url"
+        AppLanguage.PORTUGUESE -> "A consistência é o maior diferencial competitivo de todos. Hoje concluí $percentage% das minhas rotinas no AuraByte, monitorando meu progresso nos quatro quadrantes cruciais do viver: Saúde, Carreira, Mente e Família.\n\nCom $nonZeroStreak dias consecutivos de foco ativo (Heatwave 🔥), provo que bons loops comportamentais geram resultados de longo prazo de verdade. Sem milagres, apenas crescimento acumulado.\n\nO que você vai executar hoje? 💡\nOtimize o seu dia totalmente offline, seguro e livre de anúncios: $url"
+        else -> "Consistency is the ultimate competitive advantage. Today I managed to hit $percentage% on my habit routine workspace with AuraByte, tracking my progress across the four crucial life quadrants: Health, Professional, Personal, and Family. \n\nWith $nonZeroStreak consecutive days of focused execution (Heatwave 🔥), I am proving that standard behavior loops build long-term systems. No quick hacks, just compound growth.\n\nWhat are you executing today? 💡\nOptimize your day offline, secure, and ad-free: $url"
+    }
+}
+
+@Composable
+fun ShareProgressDialog(
+    uiState: MainUiState,
+    selectedLanguage: AppLanguage,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val clipboardManager = remember(context) {
+        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    }
+    
+    val totalHabits = uiState.habits.count { it.cadence.isApplicableOn(uiState.selectedDate) }
+    val completedMap = uiState.logs[uiState.selectedDate] ?: emptyMap()
+    val completedCount = uiState.habits.count { 
+        it.cadence.isApplicableOn(uiState.selectedDate) && completedMap[it.id] == true 
+    }
+    val percentage = if (totalHabits == 0) 0 else ((completedCount.toFloat() / totalHabits.toFloat()) * 100).toInt()
+    val streak = remember(uiState.logs, uiState.selectedDate) {
+        calculateCurrentStreak(uiState.logs, uiState.selectedDate)
+    }
+    
+    val formatDay = getDayOfWeekLongName(uiState.selectedDate)
+    
+    val completedListText = remember(uiState.habits, completedMap) {
+        val activeHabits = uiState.habits.filter { it.cadence.isApplicableOn(uiState.selectedDate) }
+        val comps = activeHabits.filter { completedMap[it.id] == true }
+        if (comps.isEmpty()) {
+            "• (No quadrants completed yet)"
+        } else {
+            comps.map { habit ->
+                "• ${habit.domain.displayName}: ${habit.routineText}"
+            }.joinToString("\n")
+        }
+    }
+    
+    val appUrl = "https://aurabyte.app"
+    
+    val instagramTemplate = remember(percentage, streak, selectedLanguage) {
+        getInstagramTemplate(percentage, streak, appUrl, selectedLanguage)
+    }
+    
+    val whatsappTemplate = remember(percentage, streak, formatDay, completedListText, selectedLanguage) {
+        getWhatsappTemplate(percentage, streak, formatDay, completedListText, appUrl, selectedLanguage)
+    }
+    
+    val facebookTemplate = remember(percentage, streak, selectedLanguage) {
+        getFacebookTemplate(percentage, streak, appUrl, selectedLanguage)
+    }
+    
+    var activeTab by remember { mutableStateOf(0) }
+    
+    val activeTemplateText = when (activeTab) {
+        0 -> instagramTemplate
+        1 -> whatsappTemplate
+        2 -> facebookTemplate
+        else -> {
+            val checkListText = uiState.habits.filter { it.cadence.isApplicableOn(uiState.selectedDate) }
+                .joinToString("\n") { habit ->
+                    val isCompleted = completedMap[habit.id] == true
+                    val statusBox = if (isCompleted) "✅ [OK]" else "⬜ [  ]"
+                    " $statusBox ${habit.domain.displayName}: ${habit.routineText} (${habit.cadence.displayName})"
+                }
+            """
+🏆 AURA BYTE - Daily Success Summary 🏆
+📅 Date: $formatDay
+📊 Progress: $completedCount / $totalHabits ($percentage%)
+🔥 Heatwave Streak: $streak Days
+--------------------------------------------
+$checkListText
+--------------------------------------------
+Consistently developed by Gemini and Ankit ♥️
+🚀 Download AuraByte: $appUrl
+            """.trimIndent()
+        }
+    }
+    
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .wrapContentHeight()
+                .padding(16.dp),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Glow Circle Icon
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
+                        .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), RoundedCornerShape(18.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val center = Offset(size.width / 2, size.height / 2)
+                        drawCircle(
+                            color = Color(0xFF1565C0).copy(alpha = 0.2f),
+                            radius = size.width / 3.5f,
+                            center = center
+                        )
+                        drawCircle(
+                            color = Color(0xFFEF6C00).copy(alpha = 0.15f),
+                            radius = size.width / 2.2f,
+                            center = center
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "AuraByte Star Logo",
+                        modifier = Modifier.size(32.dp),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Text(
+                    text = when (selectedLanguage) {
+                        AppLanguage.SPANISH -> "EMISORA DE LOGROS"
+                        AppLanguage.HINDI -> "उपलब्धि ब्रॉडकास्टर"
+                        AppLanguage.GERMAN -> "ERFOLGS-BROADCASTER"
+                        AppLanguage.JAPANESE -> "実績ブロードキャスター"
+                        AppLanguage.PORTUGUESE -> "BROADCASTER DE SUCESSO"
+                        else -> "ACHIEVEMENT BROADCASTER"
+                    },
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = 2.sp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
+                Text(
+                    text = when (selectedLanguage) {
+                        AppLanguage.SPANISH -> "¡Comparte tu disciplina con orgullo!"
+                        AppLanguage.HINDI -> "अपने अनुशासन पर गर्व महसूस करें!"
+                        AppLanguage.GERMAN -> "Teile deine Disziplin mit Stolz!"
+                        AppLanguage.JAPANESE -> "規律ある日常を、誇りを持ってシェア！"
+                        AppLanguage.PORTUGUESE -> "Compartilhe sua disciplina com orgulho!"
+                        else -> "Broadcast your disciplined execution!"
+                    },
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.height(14.dp))
+                
+                // Stats Dashboard
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                        .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), RoundedCornerShape(12.dp))
+                        .padding(10.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = if (streak > 0) "🔥 $streak" else "🔥 1",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFFEF6C00)
+                        )
+                        Text(
+                            text = when (selectedLanguage) {
+                                AppLanguage.SPANISH -> "Racha"
+                                AppLanguage.HINDI -> "स्ट्रीक"
+                                AppLanguage.GERMAN -> "Serie"
+                                AppLanguage.JAPANESE -> "記録"
+                                AppLanguage.PORTUGUESE -> "Série"
+                                else -> "Streak"
+                            },
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                    
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(24.dp)
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                    )
+                    
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "$completedCount/$totalHabits",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = when (selectedLanguage) {
+                                AppLanguage.SPANISH -> "Completados"
+                                AppLanguage.HINDI -> "पूरे कार्य"
+                                AppLanguage.GERMAN -> "Abgeschlossen"
+                                AppLanguage.JAPANESE -> "完了"
+                                AppLanguage.PORTUGUESE -> "Feitos"
+                                else -> "Completed"
+                            },
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                    
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(24.dp)
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                    )
+                    
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "$percentage%",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                            color = if (percentage == 100) Color(0xFF2E7D32) else MaterialTheme.colorScheme.secondary
+                        )
+                        Text(
+                            text = when (selectedLanguage) {
+                                AppLanguage.SPANISH -> "Nivel foco"
+                                AppLanguage.HINDI -> "फोकस"
+                                AppLanguage.GERMAN -> "Fokus-Grad"
+                                AppLanguage.JAPANESE -> "達成度"
+                                AppLanguage.PORTUGUESE -> "Foco"
+                                else -> "Focus Level"
+                            },
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(14.dp))
+                
+                // Slide / Tab Platform Menu
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    val tabData = listOf(
+                        Triple("Instagram", 0, Color(0xFFE1306C)),
+                        Triple("WhatsApp", 1, Color(0xFF25D366)),
+                        Triple("Facebook", 2, Color(0xFF1877F2)),
+                        Triple("Copy Custom", 3, MaterialTheme.colorScheme.secondary)
+                    )
+                    
+                    tabData.forEach { (label, index, color) ->
+                        val isSelected = activeTab == index
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) color.copy(alpha = 0.12f) else Color.Transparent)
+                                .border(
+                                    1.dp,
+                                    if (isSelected) color else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .clickable { activeTab = index }
+                                .padding(vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) color else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(10.dp))
+                
+                // Text View Code Container
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(130.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f)
+                    ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(10.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.verticalScroll(rememberScrollState())
+                        ) {
+                            Text(
+                                text = activeTemplateText,
+                                fontSize = 10.sp,
+                                fontFamily = FontFamily.Monospace,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                                lineHeight = 14.sp
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(14.dp))
+                
+                // Action Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            val clip = ClipData.newPlainText("AuraByte Progress", activeTemplateText)
+                            clipboardManager.setPrimaryClip(clip)
+                            Toast.makeText(
+                                context,
+                                when (selectedLanguage) {
+                                    AppLanguage.SPANISH -> "¡Copiado con éxito!"
+                                    AppLanguage.HINDI -> "कॉपी किया गया!"
+                                    AppLanguage.GERMAN -> "Kopiert!"
+                                    AppLanguage.JAPANESE -> "コピーしました！"
+                                    AppLanguage.PORTUGUESE -> "Copiado!"
+                                    else -> "Copied to clipboard!"
+                                },
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        border = BorderStroke(1.2.dp, MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(vertical = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Copy text icon",
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = when (selectedLanguage) {
+                                AppLanguage.SPANISH -> "Copiar"
+                                AppLanguage.HINDI -> "कॉपी करें"
+                                AppLanguage.GERMAN -> "Kopieren"
+                                AppLanguage.JAPANESE -> "コピー"
+                                AppLanguage.PORTUGUESE -> "Copiar"
+                                else -> "Copy Text"
+                            },
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    
+                    Button(
+                        onClick = {
+                            val sendIntent = android.content.Intent().apply {
+                                action = android.content.Intent.ACTION_SEND
+                                putExtra(android.content.Intent.EXTRA_TEXT, activeTemplateText)
+                                type = "text/plain"
+                            }
+                            val shareIntent = android.content.Intent.createChooser(sendIntent, "Share Progress")
+                            context.startActivity(shareIntent)
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(vertical = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Send,
+                            contentDescription = "Share",
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = when (selectedLanguage) {
+                                AppLanguage.SPANISH -> "Compartir"
+                                AppLanguage.HINDI -> "साझा करें"
+                                AppLanguage.GERMAN -> "Teilen"
+                                AppLanguage.JAPANESE -> "送信する"
+                                AppLanguage.PORTUGUESE -> "Enviar"
+                                else -> "Share Progress"
+                            },
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(10.dp))
+                
+                Text(
+                    text = when (selectedLanguage) {
+                        AppLanguage.SPANISH -> "Cerrar emisora"
+                        AppLanguage.HINDI -> "बंद करें"
+                        AppLanguage.GERMAN -> "Schließen"
+                        AppLanguage.JAPANESE -> "キャンセル"
+                        AppLanguage.PORTUGUESE -> "Fechar"
+                        else -> "Dismiss Broadcaster"
+                    },
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                    modifier = Modifier
+                        .clickable { onDismiss() }
+                        .padding(4.dp)
+                )
+            }
+        }
+    }
+}
+
 data class FaqItem(
     val question: String, 
     val answer: String, 
@@ -3500,6 +3994,12 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
                 "Hola, soy Ankit. Pasé años buscando un rastreador de hábitos en modo oscuro que fuera limpio, sin anuncios, privado y basado en psicología real. Todo lo que encontraba estaba lleno de funciones inútiles o bloqueado tras una suscripción. Así que me alié con Gemini y construí AuraByte yo mismo. Un espacio de trabajo offline y sin distracciones, hecho con ♥️ para desarrolladores que quieren pasar a la acción.", 
                 "👨‍💻", 
                 Color(0xFF2E7D32)
+            ),
+            FaqItem(
+                "¿Por qué se llama AuraByte?", 
+                "El nombre es una fusión de la cultura de internet moderna y las ciencias de la computación. Tu 'Aura' es tu vibra, tu energía y tu estado de ejecución personal. Un 'Byte' es la unidad fundamental de datos digitales. AuraByte significa que ya no estás dejando tu crecimiento personal al azar; estás cuantificando tu energía, hábitos y disciplina del mundo real en bytes de datos limpios e inmutables.", 
+                "⚡", 
+                Color(0xFF7E57C2)
             )
         )
         AppLanguage.HINDI -> listOf(
@@ -3526,6 +4026,12 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
                 "हे, मैं हूँ अंकित। मैं लंबे समय से एक ऐसा आदत ट्रैक करने वाला ऐप ढूंढ रहा था जो सुंदर हो, डार्क मोड में हो, विज्ञापन-मुक्त हो और पूरी तरह से प्राइवेट हो। बाज़ार में मौजूद ज़्यादातर ऐप्स या तो बहुत जटिल थे या पैसों के पीछे भाग रहे थे। इसलिए, मैंने Gemini के साथ मिलकर खुद का AuraByte बनाया। बिना किसी बकवास और बिना इंटरनेट के चलने वाला एक साफ-सुथरा वर्कस्पेस—उन डेवलपर्स के लिए जो असल में लाइफ में बदलाव देखना चाहते हैं। ♥️ के साथ निर्मित!", 
                 "👨‍💻", 
                 Color(0xFF2E7D32)
+            ),
+            FaqItem(
+                "इस ऐप का नाम AuraByte क्यों है?", 
+                "यह नाम मॉडर्न इंटरनेट कल्चर और कंप्यूटर साइंस का एक बेहतरीन फ्यूजन है। आपकी 'Aura' का मतलब है आपका वाइब, आपकी एनर्जी और आपके काम करने का तरीका। और एक 'Byte' डिजिटल डेटा की सबसे बुनियादी इकाई (unit) है। AuraByte का सीधा सा मतलब है कि आप अपनी पर्सनल ग्रोथ को किस्मत के भरोसे नहीं छोड़ रहे हैं; आप अपनी असली दुनिया की ऊर्जा, आदतों और अनुशासन को साफ और पक्के डेटा बाइट्स में बदल रहे हैं।", 
+                "⚡", 
+                Color(0xFF7E57C2)
             )
         )
         AppLanguage.GERMAN -> listOf(
@@ -3552,6 +4058,12 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
                 "Hi, ich bin Ankit. Ich habe ewig nach einem sauberen Dark-Mode-Gewohnheitstracker gesucht, der werbefrei, absolut privat und psychologisch fundiert ist. Alles auf dem Markt war entweder überladen oder hinter einer Paywall versteckt. Also habe ich mich mit Gemini zusammengetan und AuraByte einfach selbst gebaut. Ein komplett offline funktionierender, ablenkungsfreier Workspace—mit ♥️ gebaut für Entwickler, die einfach machen wollen.", 
                 "👨‍💻", 
                 Color(0xFF2E7D32)
+            ),
+            FaqItem(
+                "Warum heißt die App AuraByte?", 
+                "Der Name ist eine Verschmelzung aus moderner Internetkultur und Kerninformatik. Deine 'Aura' steht für deinen Vibe, deine Energie und deinen persönlichen Fokus. Ein 'Byte' ist die grundlegende Einheit digitaler Daten. AuraByte bedeutet, dass du dein persönliches Wachstum nicht mehr dem Zufall überlässt: Du quantifizierst deine reale Energie, deine Gewohnheiten und deine Disziplin in saubere, unveränderliche Daten-Bytes.", 
+                "⚡", 
+                Color(0xFF7E57C2)
             )
         )
         AppLanguage.JAPANESE -> listOf(
@@ -3578,6 +4090,12 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
                 "こんにちは、Ankitです。心理学に基づいた、広告が一切ないクリーンなダークモードの習慣トラッカーをずっと探していました。しかし、世の中にあるツールは機能が多すぎて使いづらいか、サブスク課金ばかり。それなら自分で作ろうと思い、Geminiとタッグを組んで開発したのがAuraByteです。完全にオフラインで集中できる、目標を実行に移したい開発者のためのワークスペースを、愛を込めてお届けします ♥️", 
                 "👨‍💻", 
                 Color(0xFF2E7D32)
+            ),
+            FaqItem(
+                "なぜAuraByte（オーラバイト）という名前なのですか？", 
+                "この名前は、現代のインターネットカルチャーとコンピュータサイエンスの核心を融合させたものです。「Aura（オーラ）」はあなたのバイブス、エネルギー、そして日々の実行力を表します。そして「Byte（バイト）」はデジタルデータの基本単位です。AuraByteという名前には、個人の成長をあいまいにせず、現実世界でのエネルギー、習慣、そして規律を、クリーンで不変なデジタルデータとして数値化していくという意味が込められています。", 
+                "⚡", 
+                Color(0xFF7E57C2)
             )
         )
         AppLanguage.PORTUGUESE -> listOf(
@@ -3604,6 +4122,12 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
                 "Fala aí, eu sou o Ankit. Passei anos procurando um rastreador de hábitos em modo escuro que fosse limpo, sem anúncios, totalmente privado e baseado em psicologia comportamental de verdade. Tudo no mercado era poluído ou cobrava assinatura. Então, juntei forças com o Gemini e montei o AuraByte. Um espaço de trabalho offline e sem distrações—feito com muito ♥️ para desenvolvedores que querem parar de planejar e começar a executar.", 
                 "👨‍💻", 
                 Color(0xFF2E7D32)
+            ),
+            FaqItem(
+                "Por que se chama AuraByte?", 
+                "O nome é uma fusão da cultura moderna da internet com os fundamentos da ciência da computação. Sua 'Aura' é a sua vibração, sua energia e seu estado de execução pessoal. Um 'Byte' é a unidade fundamental de dados digitais. AuraByte significa que você não está mais deixando seu crescimento pessoal ao acaso; você está quantificando sua energia, hábitos e disciplina do mundo real em bytes de dados limpos e imutáveis.", 
+                "⚡", 
+                Color(0xFF7E57C2)
             )
         )
         else -> listOf(
@@ -3630,6 +4154,12 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
                 "Hey, I'm Ankit. I spent years looking for a crisp, minimal dark-mode habit loop tracker that was completely ad-free, secure, and based on actual behavioral psychology. Everything out there was either absolute bloatware or locked behind a monthly subscription. So, I partnered up with Gemini and built AuraByte myself. A fully offline, distraction-free workspace—handcrafted with ♥️ for devs who just want to execute.", 
                 "👨‍💻", 
                 Color(0xFF2E7D32)
+            ),
+            FaqItem(
+                "Why is it called AuraByte?", 
+                "The name is a fusion of modern internet culture and core computer science. Your 'Aura' is your ultimate vibe, your energy, and your personal execution state. A 'Byte' is the fundamental unit of digital data. AuraByte means you are no longer leaving your personal growth to chance; you are quantifying your real-world energy, habits, and discipline into clean, immutable data bytes.", 
+                "⚡", 
+                Color(0xFF7E57C2)
             )
         )
     }
@@ -3704,5 +4234,4 @@ private fun getLifeAreaDoc(language: AppLanguage): LifeAreaDoc {
             conclusion = "By distributing your habits systematically, you prevent life from running lopsided. The Command Dashboard visually warns you the second one of your vital cylinders drops below optimal capacity."
         )
     }
-}
 }
