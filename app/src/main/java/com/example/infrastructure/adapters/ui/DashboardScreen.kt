@@ -129,7 +129,10 @@ fun DashboardScreen(
     var showLanguageMenu by remember { mutableStateOf(false) }
     
     // Manage state for the Interactive Charles Duhigg Tutorial Guide
-    var showTutorialGuide by rememberSaveable { mutableStateOf(true) }
+    var showTutorialGuide by rememberSaveable { mutableStateOf(false) }
+    
+    // Manage state for the Settings and FAQ page dialog
+    var showSettingsAndFaq by remember { mutableStateOf(false) }
     
     // Search query for filtering routines
     var searchQuery by rememberSaveable { mutableStateOf("") }
@@ -290,11 +293,11 @@ Consistently developed by Gemini and Ankit ♥️
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                             modifier = Modifier.padding(end = 4.dp)
                         ) {
-                            // Info Button to show Habit Loop neuroscience tutorial
-                            IconButton(onClick = { showTutorialGuide = !showTutorialGuide }) {
+                            // Settings and FAQ Button
+                            IconButton(onClick = { showSettingsAndFaq = true }) {
                                 Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = "Toggle Habit Guide",
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Open Settings & FAQ",
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -335,7 +338,7 @@ Consistently developed by Gemini and Ankit ♥️
                             // Palette Theme Toggle
                             IconButton(onClick = { viewModel.toggleTheme() }) {
                                 Icon(
-                                    imageVector = Icons.Default.Settings,
+                                    imageVector = Icons.Default.Star,
                                     contentDescription = "Toggle Palette Theme",
                                     tint = MaterialTheme.colorScheme.primary
                                 )
@@ -939,6 +942,15 @@ Consistently developed by Gemini and Ankit ♥️
                     )
                     editingHabit = null
                 }
+            )
+        }
+
+        if (showSettingsAndFaq) {
+            SettingsAndFaqDialog(
+                selectedLanguage = selectedLanguage,
+                showTutorialGuide = showTutorialGuide,
+                onToggleTutorialGuide = { showTutorialGuide = it },
+                onDismiss = { showSettingsAndFaq = false }
             )
         }
     }
@@ -3062,5 +3074,470 @@ object Localizations {
 
     fun get(lang: AppLanguage, key: String): String {
         return strings[lang]?.get(key) ?: strings[AppLanguage.ENGLISH]?.get(key) ?: ""
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsAndFaqDialog(
+    selectedLanguage: AppLanguage,
+    showTutorialGuide: Boolean,
+    onToggleTutorialGuide: (Boolean) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val scrollState = rememberScrollState()
+    var activeTab by remember { mutableIntStateOf(0) }
+    var expandedIndex by remember { mutableStateOf<Int?>(null) }
+    
+    val faqItems = getFaqItems(selectedLanguage)
+    val doc = getLifeAreaDoc(selectedLanguage)
+    
+    val settingsTitle = when (selectedLanguage) {
+        AppLanguage.SPANISH -> "Ajustes de AuraByte"
+        AppLanguage.HINDI -> "AuraByte सेटिंग्स"
+        AppLanguage.GERMAN -> "AuraByte-Einstellungen"
+        AppLanguage.JAPANESE -> "AuraByte 設定"
+        AppLanguage.PORTUGUESE -> "Configurações do AuraByte"
+        else -> "AuraByte Settings & FAQs"
+    }
+    
+    val faqTabLabel = when (selectedLanguage) {
+        AppLanguage.SPANISH -> "💡 Preguntas"
+        AppLanguage.HINDI -> "💡 मुख्य प्रश्न"
+        AppLanguage.GERMAN -> "💡 FAQ-Guide"
+        AppLanguage.JAPANESE -> "💡 よくある質問"
+        AppLanguage.PORTUGUESE -> "💡 Perguntas"
+        else -> "💡 FAQ Guide"
+    }
+
+    val docTabLabel = when (selectedLanguage) {
+        AppLanguage.SPANISH -> "⚖️ Filosofía 4 Áreas"
+        AppLanguage.HINDI -> "⚖️ ४ क्षेत्र दर्शन"
+        AppLanguage.GERMAN -> "⚖️ 4 Bereiche"
+        AppLanguage.JAPANESE -> "⚖️ 4つのライフの解説"
+        AppLanguage.PORTUGUESE -> "⚖️ Filosofia 4 Áreas"
+        else -> "⚖️ 4 Life Areas"
+    }
+
+    val tutorialToggleLabel = when (selectedLanguage) {
+        AppLanguage.SPANISH -> "Mostrar guía interactiva de hábitos"
+        AppLanguage.HINDI -> "दैनिक आदत गाइड प्रदर्शित करें"
+        AppLanguage.GERMAN -> "Interaktiven Gewohnheits-Guide anzeigen"
+        AppLanguage.JAPANESE -> "習慣ガイドを表示"
+        AppLanguage.PORTUGUESE -> "Mostrar guia de hábitos"
+        else -> "Display dashboard habit loop guide"
+    }
+    
+    val doneBtnText = when (selectedLanguage) {
+        AppLanguage.SPANISH -> "Entendido"
+        AppLanguage.HINDI -> "सहेजें"
+        AppLanguage.GERMAN -> "Schließen"
+        AppLanguage.JAPANESE -> "完了"
+        AppLanguage.PORTUGUESE -> "Fechar"
+        else -> "Close Settings"
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth(0.95f)
+                .fillMaxHeight(0.85f)
+                .border(BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)), RoundedCornerShape(24.dp)),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.background
+            ),
+            shape = RoundedCornerShape(24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(18.dp)
+            ) {
+                // Dialog Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = settingsTitle,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontFamily = FontFamily.Monospace,
+                        letterSpacing = 0.5.sp
+                    )
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close Settings",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(10.dp))
+                
+                // Custom Tab Row Capsules
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                        .padding(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    listOf(faqTabLabel, docTabLabel).forEachIndexed { index, label ->
+                        val isSelected = activeTab == index
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .clickable { activeTab = index }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.61f)
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(14.dp))
+                
+                // Scrollable container
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    if (activeTab == 0) {
+                        // FAQ tab
+                        faqItems.forEachIndexed { index, faq ->
+                            val isExpanded = expandedIndex == index
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f))
+                                    .border(
+                                        BorderStroke(
+                                            1.dp,
+                                            if (isExpanded) faq.categoryColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                                        ),
+                                        RoundedCornerShape(12.dp)
+                                    )
+                                    .clickable { expandedIndex = if (isExpanded) null else index }
+                                    .padding(14.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(text = faq.icon, fontSize = 15.sp)
+                                        Text(
+                                            text = faq.question,
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isExpanded) faq.categoryColor else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                    Text(
+                                        text = if (isExpanded) "▲" else "▼",
+                                        fontSize = 10.sp,
+                                        color = if (isExpanded) faq.categoryColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                    )
+                                }
+                                
+                                AnimatedVisibility(
+                                    visible = isExpanded,
+                                    enter = fadeIn() + expandVertically(),
+                                    exit = fadeOut() + shrinkVertically()
+                                ) {
+                                    Column {
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f))
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Text(
+                                            text = faq.answer,
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                                            lineHeight = 17.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // Philosophy tab
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
+                                    .border(BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)), RoundedCornerShape(14.dp))
+                                    .padding(14.dp)
+                            ) {
+                                Text(
+                                    text = doc.title,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = doc.introduction,
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.82f),
+                                    lineHeight = 16.sp
+                                )
+                            }
+                            
+                            doc.areas.forEach { (areaTitle, areaDesc, areaColor) ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(areaColor.copy(alpha = 0.04f))
+                                        .border(BorderStroke(1.dp, areaColor.copy(alpha = 0.15f)), RoundedCornerShape(12.dp))
+                                        .padding(12.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .width(4.dp)
+                                            .height(38.dp)
+                                            .clip(RoundedCornerShape(2.dp))
+                                            .background(areaColor)
+                                    )
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = areaTitle,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = areaColor
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = areaDesc,
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.77f),
+                                            lineHeight = 15.sp
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = doc.conclusion,
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                textAlign = TextAlign.Center,
+                                lineHeight = 15.sp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp)
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(14.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f))
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // Bottom control actions: Interactive Switch
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.04f))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = tutorialToggleLabel,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Switch(
+                        checked = showTutorialGuide,
+                        onCheckedChange = onToggleTutorialGuide,
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                            checkedTrackColor = MaterialTheme.colorScheme.primary
+                        )
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = doneBtnText,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+data class FaqItem(
+    val question: String, 
+    val answer: String, 
+    val icon: String, 
+    val categoryColor: Color
+)
+
+data class LifeAreaDoc(
+    val title: String, 
+    val introduction: String,
+    val areas: List<Triple<String, String, Color>>,
+    val conclusion: String
+)
+
+private fun getFaqItems(language: AppLanguage): List<FaqItem> {
+    return when (language) {
+        AppLanguage.SPANISH -> listOf(
+            FaqItem("¿Cómo entiendo esta aplicación?", "AuraByte se basa en el bucle de hábitos de Charles Duhigg: Señal ➔ Rutina ➔ Recompensa. Al definir un disparador ambiental (ej: 'sentarme al escritorio'), automatizas una acción positiva ('escribir 100 palabras'), reforzada por un premio inmediato ('té caliente') para reconfigurar tu cerebro.", "💡", Color(0xFF1565C0)),
+            FaqItem("¿Cómo construyo un hábito permanente?", "La permanencia proviene de conectar tu Señal con rutinas diarias consistentes y Recompensas inmediatas. ¡Empieza de forma muy pequeña, prioriza la constancia y usa nuestro registro automático de frecuencias (Diario, Fin de semana, Fin de semana, Mensual) para calentar tu racha ('Heatwave')!", "🔥", Color(0xFFEF6C00)),
+            FaqItem("¿Cómo ayuda esta aplicación a que mi vida sea valiosa?", "Vivir de forma valiosa requiere equilibrio. AuraByte rastrea 4 áreas clave (Salud, Profesional, Personal, Social). El panel de control en tiempo real mide tu equilibrio diario, evitando el agotamiento al tiempo que fomenta tu bienestar físico, crecimiento profesional, sabiduría interna y conexiones sociales.", "⚖️", Color(0xFFE91E63)),
+            FaqItem("¿Quién construyó esta aplicación? (Historia de Ankit)", "AuraByte fue creado por el desarrollador Ankit Sudegora en colaboración con Gemini. 'Busqué un rastreador de hábitos libre de anuncios que siguiera la psicología de Duhigg durante mucho tiempo. Al no encontrar nada satisfactorio, construí este espacio de trabajo limpio, estético y fuera de línea. ¡Desarrollado con ♥️!'", "👨‍💻", Color(0xFF2E7D32))
+        )
+        AppLanguage.HINDI -> listOf(
+            FaqItem("मैं इस एप्लीकेशन को कैसे समझूँ?", "AuraByte चार्ल्स डुहिंग के मनोवैज्ञानिक आदत लूप (संकेत ➔ आदत ➔ पुरस्कार) पर आधारित है। अपने दैनिक जीवन के किसी संकेत (जैसे: 'डेस्क पर बैठना') को जोड़कर आप एक सकारात्मक कार्य ('100 शब्द लिखना') को स्वचालित करते हैं, और इसे एक छोटे पुरस्कार ('गर्म चाय') से मजबूत करते हैं।", "💡", Color(0xFF1565C0)),
+            FaqItem("मैं ऐसी आदत कैसे बनाऊँ जो हमेशा टिकी रहे?", "स्थायित्व आपके संकेत (Trigger) को वर्तमान की आदतों और त्वरित पुरस्कारों से जोड़ने से आता है। बहुत छोटी शुरुआत करें, निरंतरता पर ध्यान दें, और लगातार स्ट्रीक ('Heatwave') बनाए रखने के लिए हमारे स्वचालित शेड्यूल का उपयोग करें!", "🔥", Color(0xFFEF6C00)),
+            FaqItem("यह ऐप मेरे जीवन को मूल्यवान बनाने में कैसे मदद कर सकता है?", "मूल्यवान जीवन संतुलन से आता है। AuraByte 4 प्रमुख क्षेत्रों (स्वास्थ्य, पेशेवर, व्यक्तिगत, सामाजिक) को ट्रैक करता है। हमारा लाइव कमांड डैशबोर्ड वास्तविक समय में आपके दैनिक संतुलन को मापता है, जिससे आप काम के तनाव से बचते हुए स्वास्थ्य और रिश्तों को भी समय दे पाते हैं।", "⚖️", Color(0xFFE91E63)),
+            FaqItem("यह ऐप किसने बनाया? (अंकित की कहानी)", "AuraByte का निर्माण डेवलपर Ankit Sudegora ने Gemini के साथ मिलकर किया है। 'मैं काफी समय से चार्ल्स डुहिग के सिद्धांत पर आधारित एक सुंदर और विज्ञापन-मुक्त ऐप ढूंढ रहा था। कुछ न मिलने पर मैंने स्वयं इसे ऑफलाइन और पूरी तरह सुरक्षित बनाने का निर्णय लिया। ♥ी के साथ विकसित!'", "👨‍💻", Color(0xFF2E7D32))
+        )
+        AppLanguage.GERMAN -> listOf(
+            FaqItem("Wie verstehe ich diese Anwendung?", "AuraByte basiert auf der wissenschaftlichen Gewohnheitsschleife nach Charles Duhigg: Auslöser ➔ Routine ➔ Belohnung. Indem Sie einen Auslöser definieren (z. B. 'am Schreibtisch sitzen'), automatisieren Sie positive Routinen ('100 Wörter schreiben'), verstärkt durch Belohnungen ('heißer Tee').", "💡", Color(0xFF1565C0)),
+            FaqItem("Wie baue ich eine Gewohnheit auf, die dauerhaft bleibt?", "Dauerhaftigkeit entsteht, wenn Sie Ihren Auslöser mit bestehenden Gewohnheiten und sofortigen Belohnungen verbinden. Fangen Sie extrem klein an, konzentrieren Sie sich auf Beständigkeit und nutzen Sie unsere automatischen Zeitpläne, um Ihre Beständigkeitsserie ('Heatwave') auszubauen!", "🔥", Color(0xFFEF6C00)),
+            FaqItem("Wie hilft diese App, mein Leben wertvoller zu machen?", "Ein wertvolles Leben entsteht durch Balance. AuraByte verfolgt 4 Kernbereiche (Gesundheit, Beruf, Persönlich, Sozial). Unser Live-Command-Dashboard zeigt Ihre tägliche Balance in Echtzeit an, um Burnout zu vermeiden und gleichzeitig Vitalität, beruflichen Erfolg und tiefe Beziehungen zu nähren.", "⚖️", Color(0xFFE91E63)),
+            FaqItem("Wer hat diese App entwickelt? (Die Story von Ankit)", "AuraByte wurde vom Entwickler Ankit Sudegora in Zusammenarbeit mit Gemini erstellt. 'Ich habe lange nach einem werbefreien, ästhetischen Gewohnheitstracker gesucht, der auf der Psychologie von Duhigg basiert. Da ich nichts fand, habe ich diesen sauberen, eigenständigen Offline-Arbeitsbereich gebaut. Entwickelt mit ♥️!'", "👨‍💻", Color(0xFF2E7D32))
+        )
+        AppLanguage.JAPANESE -> listOf(
+            FaqItem("このアプリの仕組みは？", "AuraByteはチャールズ・デュヒッグ式の習慣ループ（きっかけ ➔ 行動 ➔ ごほうび）に基づいています。日常生活の「きっかけ」（例:『デスクに座る』）を設定し、ポジティブな「行動」（例:『日記を100文字書く』）を行い、すぐの「ごほうび」（例:『美味しいお茶を飲む』）で脳に定着させます。", "💡", Color(0xFF1565C0)),
+            FaqItem("一生モノの習慣を身につけるには？", "定着させるカギは、きっかけを確実に起こる日常行動と結びつけ、すぐにごほうびを与えることです。最初は驚くほど小さく始め、継続を最優先にしましょう。自動頻度スケジュールを活用して、継続のバロメーター（Heatwave）を伸ばしていきましょう！", "🔥", Color(0xFFEF6C00)),
+            FaqItem("人生の価値を高めるために、このアプリはどう役立ちますか？", "価値ある人生はバランスから生まれます。AuraByteは4つの重要分野（健康、仕事、個人、社交）を追跡します。リアルタイムCommand Dashboardが日々のバランスを数値化し、どれか一つに偏ることなく、調和した充実したライフスタイルを築けます。", "⚖️", Color(0xFFE91E63)),
+            FaqItem("開発者のストーリーは？", "AuraByteは、開発者のAnkit SudegoraがGeminiと共同開発したものです。『デュヒッグ式の心理学に基づいた、美しく広告のない習慣トラッカーをずっと探していました。満足できるツールが見つからなかったため、オフラインで機能するクリーンなこのアプリを自分で作りました。愛を込めて構築 ♥️』", "👨‍💻", Color(0xFF2E7D32))
+        )
+        AppLanguage.PORTUGUESE -> listOf(
+            FaqItem("Como eu entendo este aplicativo?", "O AuraByte baseia-se no método de loop de hábitos de Charles Duhigg: Gatilho ➔ Ação ➔ Recompensa. Ao vincular um gatilho ambiental (ex: 'sentar na escrivaninha'), você automatiza uma ação positiva ('escrever 100 palavras') reforçada por um prêmio ('chá quente') para reconfigurar seu cérebro.", "💡", Color(0xFF1565C0)),
+            FaqItem("Como criar hábitos que durem para sempre?", "A fixação depende de associar o Gatilho a estímulos consistentes do seu dia a dia e Recompensas imediatas. Comece extremamente pequeno, priorize a consistência primária e use nossos cronogramas automáticos para manter sua chama ativa ('Heatwave')!", "🔥", Color(0xFFEF6C00)),
+            FaqItem("Como este aplicativo torna minha vida mais valiosa?", "Uma vida valiosa exige equilíbrio constante. O AuraByte monitora 4 áreas essenciais (Saúde, Profissional, Pessoal, Social). O Painel de Comando em tempo real avalia seu equilíbrio diário, protegendo você do esgotamento ao mesmo tempo que nutre sua vitalidade, carreira, mente e conexões afetivas.", "⚖️", Color(0xFFE91E63)),
+            FaqItem("Quem desenvolveu este aplicativo? (História de Ankit)", "O AuraByte foi criado pelo desenvolvedor Ankit Sudegora em colaboração com o Gemini. 'Eu buscava um rastreador de hábitos focado em psicologia comportamental livre de propagandas há muito tempo. Por não encontrar, criei este espaço de trabalho estético, limpo e offline. Desenvolvido com muito ♥️!'", "👨‍💻", Color(0xFF2E7D32))
+        )
+        else -> listOf(
+            FaqItem("How do I understand this Application?", "AuraByte is built on Charles Duhigg's psychology-backed habit loop: Trigger (Cue) ➔ Action (Routine) ➔ Reward. By specifying an environmental trigger (e.g. 'sit down at desk'), you automate positive actions ('write 100 words'), reinforced by micro-rewards ('hot tea') to rewire your brain path of least resistance.", "💡", Color(0xFF1565C0)),
+            FaqItem("How do I build a habit which will always be there?", "Stickiness comes from connecting your Trigger to existing, highly consistent daily cues and immediate Rewards. Start incredibly small, focus strictly on consistency first, and use our automatic frequency schedules (Daily, Weekdays, Weekends, Monthly) to build a long streak ('Heatwave') without breaking the chain!", "🔥", Color(0xFFEF6C00)),
+            FaqItem("How can this app help make my life valuable?", "Valuable living comes from life-wide balance. AuraByte tracks 4 key areas (Health, Professional, Personal, Social). Our live Command Dashboard tracks your daily equilibrium across these dimensions in real-time, preventing burn-out while nurturing healthy vitality, professional growth, wisdom, and core relationships.", "⚖️", Color(0xFFE91E63)),
+            FaqItem("Who built this application? (Ankit's Story)", "AuraByte was created by developer Ankit Sudegora in collaboration with Gemini. 'I searched for an aesthetic, ad-free habit loop tracker that followed Duhigg's psychology for a long time. Unable to find anything satisfying, I built this clean, beautiful, and fully offline workspace. Developed with ♥️!'", "👨‍💻", Color(0xFF2E7D32))
+        )
+    }
+}
+
+private fun getLifeAreaDoc(language: AppLanguage): LifeAreaDoc {
+    return when (language) {
+        AppLanguage.SPANISH -> LifeAreaDoc(
+            title = "Filosofía de las 4 Áreas de la Vida",
+            introduction = "La vida es un motor complejo y multidimensional. Si un cilindro falla, todo el vehículo sufre. Destilamos la experiencia humana en 4 dominios esenciales para ayudarte a mantener un estilo de vida perfectamente armonioso:",
+            areas = listOf(
+                Triple("1. Salud (Vitalidad)", "La base física de todo. Tu sueño, nutrición y ejercicio determinan la energía disponible para alimentar todo lo demás en tu día.", Color(0xFF2E7D32)),
+                Triple("2. Profesional (Impacto)", "Tu carrera, habilidades y finanzas. Es tu vía para perfeccionar tu maestría técnica y aportar valor real a la sociedad.", Color(0xFF1565C0)),
+                Triple("3. Personal (Crecimiento)", "Lectura, meditación, pasatiempos y autorreflexión. Esto nutre tu mundo interno y mantiene tu mente ágil, calmada y sabia.", Color(0xFFE91E63)),
+                Triple("4. Social (Conexión)", "Familia, relaciones profundas y comunidad. Brinda la red de seguridad emocional y el amor que los seres humanos necesitan para prosperar.", Color(0xFFEF6C00))
+            ),
+            conclusion = "Al registrar hábitos estructurados en estas áreas, evitas desequilibrios. El panel 'Command' te muestra en tiempo real cómo estás cuidando cada área vital."
+        )
+        AppLanguage.HINDI -> LifeAreaDoc(
+            title = "जीवन के ४ मूलभूत क्षेत्रों का दर्शन",
+            introduction = "जीवन एक जटिल, बहुआयामी इंजन की तरह है। यदि इसका एक भी हिस्सा खराब होता है, तो पूरा वाहन संघर्ष करता है। हमने मानव जीवन को ४ मुख्य क्षेत्रों में विभाजित किया है ताकि आप पूरी तरह संतुलित और खुशहाल जीवन जी सकें:",
+            areas = listOf(
+                Triple("१. स्वास्थ्य (vitality)", "आपका स्वास्थ्य जीवन की नींव है। आपकी नींद, पोषण और व्यायाम वह ऊर्जा भंडार बनाते हैं जो बाकी सब कुछ संचालित करता है।", Color(0xFF2E7D32)),
+                Triple("२. पेशेवर (Career & Mastery)", "आपका करियर, ज्ञान और वित्तीय स्थिरता। समाज में योगदान देने और अपनी क्षमताओं को निखारने का यही मुख्य माध्यम है।", Color(0xFF1565C0)),
+                Triple("३. व्यक्तिगत (Mental Growth)", "ज्ञान अर्जन, आत्मनिरीक्षण, कला, और ध्यान। यह आपके मन को शांत, प्रखर और संवेदनशील बनाए रखता है।", Color(0xFFE91E63)),
+                Triple("४. सामाजिक (Connection)", "परिवार, गहरे मित्र, और सामाजिक रिश्ते। सच्चे रिश्ते जीवन में मानसिक सुरक्षा और भरपूर खुशियों का मुख्य स्रोत हैं।", Color(0xFFEF6C00))
+            ),
+            conclusion = "इन क्षेत्रों में बंटे हुए आदतों को ट्रैक करने से आपका विकास कभी भी एकाकी नहीं होता। डैशबोर्ड के माध्यम से आप निरंतर अपने चारों क्षेत्रों को मजबूत और संतुलित रख सकते हैं।"
+        )
+        AppLanguage.GERMAN -> LifeAreaDoc(
+            title = "Philosophie der 4 Lebensbereiche",
+            introduction = "Das Leben ist ein hochkomplexer Motor. Wenn ein Zylinder ausfällt, leidet das ganze Fahrzeug. Wir haben die menschliche Existenz auf 4 Kernbereiche reduziert, um Ihnen zu helfen, ein harmonisches Leben zu führen:",
+            areas = listOf(
+                Triple("1. Gesundheit (Vitalität)", "Das körperliche Fundament. Schlaf, Ernährung und Bewegung sind die Energiereserve, die alles andere in Ihrem Alltag antreibt.", Color(0xFF2E7D32)),
+                Triple("2. Beruf (Wirkung & Erfolg)", "Karriere, Finanzen und Fähigkeiten. So bauen Sie Kompetenz auf und leisten einen wertvollen Beitrag zur Welt.", Color(0xFF1565C0)),
+                Triple("3. Persönlich (Geist & Seele)", "Mentale Weiterbildung, Meditation, Hobbys. Das nährt Ihre innere Welt und hält Ihren Verstand wach, ruhig und weise.", Color(0xFFE91E63)),
+                Triple("4. Sozial (Liebe & Beziehung)", "Familie, enge Freunde, Gemeinschaft. Tiefe, vertrauensvolle Beziehungen schenken emotionale Sicherheit und echte Lebensfreude.", Color(0xFFEF6C00))
+            ),
+            conclusion = "Durch die Verteilung Ihrer Gewohnheiten auf diese Bereiche vermeiden Sie Einseitigkeit. Das Command-Dashboard zeigt Ihnen in Echtzeit, wo Sie stehen."
+        )
+        AppLanguage.JAPANESE -> LifeAreaDoc(
+            title = "4つのライフエリアの哲学",
+            introduction = "人生は複雑な多次元エンジンです。1つのシリンダーが停止すれば、車全体がうまく走りません。調和のとれたライフスタイルをサポートするため、人間の営みを4大領域に集約しました：",
+            areas = listOf(
+                Triple("1. 健康 (活力のベース)", "すべての土台。睡眠、栄養、運動は、日々のあらゆる活動に燃料を供給するエネルギーの源泉です。", Color(0xFF2E7D32)),
+                Triple("2. 職業 (社会的インパクト)", "キャリア、スキル、経済的自立。能力を磨き、社会に価値を提供するアプローチ。やりがいを実感できます。", Color(0xFF1565C0)),
+                Triple("3. 個人 (内なる知恵)", "読書、瞑想、創作活動。内面を豊かにし、精神を柔軟で穏やかに、かつ機知に富んだ状態に保ちます。", Color(0xFFE91E63)),
+                Triple("4. 社交 (心のつながり)", "家族、友達、コミュニティ。社会的動物である人間に豊かで深い安心感と愛をもたらす重要な関係。長寿に直結します。", Color(0xFFEF6C00))
+            ),
+            conclusion = "特定の分野だけに偏ることなく生活バランスを整えることができます。Command Dashboard of progress is dynamic."
+        )
+        AppLanguage.PORTUGUESE -> LifeAreaDoc(
+            title = "A Filosofia das 4 Áreas da Vida",
+            introduction = "A vida é um motor complexo. Se um cilindro falha, todo o veículo sofre. Destilamos a experiência humana em 4 domínios essenciais para ajudar você a manter um viver plenamente equilibrado e produtivo:",
+            areas = listOf(
+                Triple("1. Saúde (Base de Força)", "O pilar físico. Seu sono, alimentação e treinos são o reservatório de energia que abastece todas as outras coisas no seu dia.", Color(0xFF2E7D32)),
+                Triple("2. Profissional (Habilidade)", "Carreira, estudos e finanças. É como você busca a excelência prática, desenvolve novas competências e gera valor social.", Color(0xFF1565C0)),
+                Triple("3. Pessoal (Mente Livre)", "Leitura, meditação, hobbies. Alimenta sua autoconsciência e mantém sua mente flexível, afiada, calma e equilibrada.", Color(0xFFE91E63)),
+                Triple("4. Social (Amor & Parceria)", "Família, amizades sinceras e comunidade. Oferece a rede de apoio que fortalece o bem-estar psicológico e gera felicidade real.", Color(0xFFEF6C00))
+            ),
+            conclusion = "Rotinas espalhadas por estas áreas evitam que você negligencie o que importa. O painel interativo avalia essa harmonia diariamente."
+        )
+        else -> LifeAreaDoc(
+            title = "The Philosophy of the 4 Areas of Life",
+            introduction = "Life is a complex, multi-dimensional engine. If one cylinder misfires, the entire vehicle struggles. We distilled the human experience into 4 core domains to help you maintain a perfectly balanced, vibrant, and incredibly fulfilling lifestyle:",
+            areas = listOf(
+                Triple("1. Health (Vitality)", "The physical base. Your sleep, nutrition, and exercise are the energy reserve that fuels everything else.", Color(0xFF2E7D32)),
+                Triple("2. Professional (Impact & Mastery)", "Your career, skills, and financial health. This of course is how you build competency and contribute value to the world.", Color(0xFF1565C0)),
+                Triple("3. Personal (Wisdom & Reflection)", "Mental growth, reading, meditation, and hobbies. This fulfills the internal self and keeps your mind agile and calm.", Color(0xFFE91E63)),
+                Triple("4. Social (Connection & Love)", "Family, deep friendships, and community. This provides the emotional safety net and love that humans need to thrive.", Color(0xFFEF6C00))
+            ),
+            conclusion = "By tracking habit loops categorized in these distinct domains, AuraByte prevents life lopsidedness. The Command Dashboard gives you a real-time health indicator of these vital cylinders."
+        )
     }
 }
