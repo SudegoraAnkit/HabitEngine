@@ -1,0 +1,6 @@
+{
+  "name": "AuraByte",
+  "description": "A privacy-first, psychology-driven habit engine rooted strictly in Charles Duhigg's Habit Loop framework.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
