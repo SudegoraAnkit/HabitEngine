@@ -10,10 +10,10 @@ enum class LifeDomain {
 
     val displayName: String
         get() = when (this) {
-            HEALTH -> "Health & Fitness"
-            PROFESSIONAL -> "Professional Growth"
-            PERSONAL -> "Personal Development"
-            FAMILY -> "Family & Social"
+            HEALTH -> "Health"
+            PROFESSIONAL -> "Professional"
+            PERSONAL -> "Personal"
+            FAMILY -> "Social"
         }
 }
 
@@ -25,10 +25,10 @@ enum class Cadence {
 
     val displayName: String
         get() = when (this) {
-            DAILY -> "Every Day"
-            WEEKDAYS -> "Weekdays Only"
-            WEEKENDS -> "Weekends Only"
-            MONTHLY -> "Monthly Cycle"
+            DAILY -> "Daily"
+            WEEKDAYS -> "Weekdays"
+            WEEKENDS -> "Weekends"
+            MONTHLY -> "Monthly"
         }
 }
 
