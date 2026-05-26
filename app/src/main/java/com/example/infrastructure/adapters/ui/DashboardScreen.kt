@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -44,6 +45,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.focus.FocusDirection
+import android.content.Context
+import android.content.ClipboardManager
+import android.content.ClipData
+import android.widget.Toast
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.core.domain.Cadence
 import com.example.core.domain.Habit
@@ -117,6 +122,59 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     
+    // Active Regional Language Settings (Defaults to English)
+    var selectedLanguage by rememberSaveable { mutableStateOf(AppLanguage.ENGLISH) }
+    
+    // Manage state for displaying regional selector menu
+    var showLanguageMenu by remember { mutableStateOf(false) }
+    
+    // Manage state for the Interactive Charles Duhigg Tutorial Guide
+    var showTutorialGuide by rememberSaveable { mutableStateOf(true) }
+    
+    // Search query for filtering routines
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    
+    // Category quick filter by domain
+    var selectedFilterDomain by remember { mutableStateOf<LifeDomain?>(null) }
+    
+    val context = LocalContext.current
+    val clipboardManager = remember(context) {
+        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    }
+
+    // Function to copy a beautiful Daily Success Receipt to clipboard
+    val onShareAchievement = {
+        val totalHabits = uiState.habits.count { it.cadence.isApplicableOn(uiState.selectedDate) }
+        val completedMap = uiState.logs[uiState.selectedDate] ?: emptyMap()
+        val completedCount = uiState.habits.count { 
+            it.cadence.isApplicableOn(uiState.selectedDate) && completedMap[it.id] == true 
+        }
+        val percentage = if (totalHabits == 0) 0 else ((completedCount.toFloat() / totalHabits.toFloat()) * 100).toInt()
+        
+        val formatDay = getDayOfWeekLongName(uiState.selectedDate)
+        val checkListText = uiState.habits.filter { it.cadence.isApplicableOn(uiState.selectedDate) }
+            .joinToString("\n") { habit ->
+                val isCompleted = completedMap[habit.id] == true
+                val statusBox = if (isCompleted) "✅ [OK]" else "⬜ [  ]"
+                " $statusBox ${habit.domain.displayName}: ${habit.routineText} (${habit.cadence.displayName})"
+            }
+            
+        val receiptText = """
+🏆 AURA BYTE - Daily Success Summary 🏆
+📅 Date: $formatDay
+📊 Progress: $completedCount / $totalHabits ($percentage%)
+--------------------------------------------
+$checkListText
+--------------------------------------------
+Consistently developed by Gemini and Ankit ♥️
+🚀 AuraByte: Charles Duhigg Habit Loop Tracker.
+        """.trimIndent()
+        
+        val clip = ClipData.newPlainText("AuraByte Progress", receiptText)
+        clipboardManager.setPrimaryClip(clip)
+        Toast.makeText(context, Localizations.get(selectedLanguage, "share_toast"), Toast.LENGTH_SHORT).show()
+    }
+
     // Track dates to display in horizontal tester
     val dates = remember { getMockTestDates() }
     
@@ -214,7 +272,7 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "AURA BYTE",
+                                text = Localizations.get(selectedLanguage, "app_title"),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = MaterialTheme.colorScheme.onBackground,
@@ -227,12 +285,61 @@ fun DashboardScreen(
                         containerColor = Color.Transparent
                     ),
                     actions = {
-                        IconButton(onClick = { viewModel.toggleTheme() }) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Toggle Palette Theme",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(end = 4.dp)
+                        ) {
+                            // Info Button to show Habit Loop neuroscience tutorial
+                            IconButton(onClick = { showTutorialGuide = !showTutorialGuide }) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = "Toggle Habit Guide",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            
+                            // Share Success receipt Button
+                            IconButton(onClick = onShareAchievement) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Share Daily Success",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+
+                            // Dynamic Region / Language selector capsule
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                                    .clickable { showLanguageMenu = !showLanguageMenu }
+                                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(text = selectedLanguage.flag, fontSize = 14.sp)
+                                    Text(
+                                        text = selectedLanguage.code.uppercase(),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
+                            }
+
+                            // Palette Theme Toggle
+                            IconButton(onClick = { viewModel.toggleTheme() }) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Toggle Palette Theme",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 )
@@ -266,13 +373,13 @@ fun DashboardScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Cadence Sandbox",
+                                text = Localizations.get(selectedLanguage, "cadence_sandbox"),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
-                                text = "Test dynamic filters",
+                                text = Localizations.get(selectedLanguage, "test_filters"),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -296,6 +403,143 @@ fun DashboardScreen(
                     }
                 }
 
+                // Interactive Charles Duhigg Habit Loop Tutorial Guide
+                if (showTutorialGuide) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(
+                                    BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                                    RoundedCornerShape(16.dp)
+                                ),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+                            ),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Info,
+                                            contentDescription = "Tutorial",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Column {
+                                            Text(
+                                                text = Localizations.get(selectedLanguage, "guide_title"),
+                                                fontSize = 14.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontFamily = FontFamily.Monospace
+                                            )
+                                            Text(
+                                                text = Localizations.get(selectedLanguage, "guide_subtitle"),
+                                                fontSize = 10.sp,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                            )
+                                        }
+                                    }
+                                    
+                                    IconButton(
+                                        onClick = { showTutorialGuide = false },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Dismiss guide",
+                                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                    }
+                                }
+
+                                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+
+                                // Three-Step neuroscience loop explanation
+                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text(
+                                            text = Localizations.get(selectedLanguage, "guide_cue"),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
+                                            fontFamily = FontFamily.Monospace
+                                        )
+                                        Text(
+                                            text = Localizations.get(selectedLanguage, "guide_cue_desc"),
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                            lineHeight = 15.sp
+                                        )
+                                    }
+                                    
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text(
+                                            text = Localizations.get(selectedLanguage, "guide_routine"),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.secondary,
+                                            fontFamily = FontFamily.Monospace
+                                        )
+                                        Text(
+                                            text = Localizations.get(selectedLanguage, "guide_routine_desc"),
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                            lineHeight = 15.sp
+                                        )
+                                    }
+                                    
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                        Text(
+                                            text = Localizations.get(selectedLanguage, "guide_reward"),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.tertiary,
+                                            fontFamily = FontFamily.Monospace
+                                        )
+                                        Text(
+                                            text = Localizations.get(selectedLanguage, "guide_reward_desc"),
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                            lineHeight = 15.sp
+                                        )
+                                    }
+                                }
+                                
+                                Button(
+                                    onClick = { showTutorialGuide = false },
+                                    modifier = Modifier.align(Alignment.End),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                        contentColor = MaterialTheme.colorScheme.primary
+                                    ),
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = Localizations.get(selectedLanguage, "guide_dismiss"),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Mastery Dashboard Grid
                 item {
                     CommandDashboard(
@@ -313,6 +557,115 @@ fun DashboardScreen(
                     )
                 }
 
+                // Search & Category Filter Panel
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = { 
+                                Text(
+                                    text = Localizations.get(selectedLanguage, "search_placeholder"),
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                ) 
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search icon",
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            trailingIcon = {
+                                if (searchQuery.isNotEmpty()) {
+                                    IconButton(onClick = { searchQuery = "" }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Clear",
+                                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true
+                        )
+                        
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            if (selectedFilterDomain == null) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                            else MaterialTheme.colorScheme.surface
+                                        )
+                                        .border(
+                                            1.dp,
+                                            if (selectedFilterDomain == null) MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                                            else Color.Transparent,
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .clickable { selectedFilterDomain = null }
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = Localizations.get(selectedLanguage, "all_categories"),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (selectedFilterDomain == null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                }
+                            }
+                            
+                            items(LifeDomain.values().toList()) { domain ->
+                                val isSelected = selectedFilterDomain == domain
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            if (isSelected) getDomainColor(domain).copy(alpha = 0.2f)
+                                            else MaterialTheme.colorScheme.surface
+                                        )
+                                        .border(
+                                            1.dp,
+                                            if (isSelected) getDomainColor(domain).copy(alpha = 0.4f)
+                                            else Color.Transparent,
+                                            RoundedCornerShape(8.dp)
+                                        )
+                                        .clickable { selectedFilterDomain = domain }
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(6.dp)
+                                                .clip(CircleShape)
+                                                .background(getDomainColor(domain))
+                                        )
+                                        Text(
+                                            text = domain.displayName,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isSelected) getDomainColor(domain) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Daily Habit Header state
                 item {
                     Row(
@@ -323,20 +676,20 @@ fun DashboardScreen(
                         Column {
                             val selectedDayText = getDayOfWeekLongName(uiState.selectedDate)
                             Text(
-                                text = "Daily Routine Loop",
+                                text = Localizations.get(selectedLanguage, "daily_routine"),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
-                                text = "Active for $selectedDayText",
+                                text = String.format(Localizations.get(selectedLanguage, "active_for"), selectedDayText),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.secondary
                             )
                         }
                         
                         Text(
-                            text = "${uiState.habits.count { it.cadence.isApplicableOn(uiState.selectedDate) }} Active",
+                            text = String.format(Localizations.get(selectedLanguage, "active_badge"), uiState.habits.count { it.cadence.isApplicableOn(uiState.selectedDate) }),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
@@ -344,14 +697,23 @@ fun DashboardScreen(
                     }
                 }
 
-                // Habit Cards
-                val activeHabits = uiState.habits
-                if (activeHabits.isEmpty()) {
+                // Filtered Habit Cards List
+                val filteredHabits = uiState.habits.filter { habit ->
+                    val matchesDate = habit.cadence.isApplicableOn(uiState.selectedDate)
+                    val matchesSearch = searchQuery.isBlank() || 
+                        habit.routineText.contains(searchQuery, ignoreCase = true) ||
+                        habit.cueText.contains(searchQuery, ignoreCase = true) ||
+                        habit.rewardText.contains(searchQuery, ignoreCase = true)
+                    val matchesCategory = selectedFilterDomain == null || habit.domain == selectedFilterDomain
+                    matchesDate && matchesSearch && matchesCategory
+                }
+                
+                if (filteredHabits.isEmpty()) {
                     item {
-                        EmptyStateCard(onNewHabitClick = { showAddForm = true })
+                        EmptyStateCard(selectedLanguage = selectedLanguage, onNewHabitClick = { showAddForm = true })
                     }
                 } else {
-                    items(activeHabits, key = { it.id }) { habit ->
+                    items(filteredHabits, key = { it.id }) { habit ->
                         val isSelectable = habit.cadence.isApplicableOn(uiState.selectedDate)
                         val completedMap = uiState.logs[uiState.selectedDate] ?: emptyMap()
                         val isCompleted = completedMap[habit.id] == true
@@ -459,9 +821,95 @@ fun DashboardScreen(
             )
         }
 
-        // Creation Dialog Screen (Forms Charles Duhigg psychological sentence sentence)
+        // Regional Language Custom Selection Overlay Menu (Material 3 Adaptive Modal)
+        if (showLanguageMenu) {
+            Dialog(onDismissRequest = { showLanguageMenu = false }) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth(0.92f)
+                        .wrapContentHeight()
+                        .border(
+                            BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                            RoundedCornerShape(24.dp)
+                        ),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Text(
+                            text = "Regional Translations",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontFamily = FontFamily.Monospace
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                        
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.heightIn(max = 300.dp)
+                        ) {
+                            items(AppLanguage.values().toList()) { lang ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(
+                                            if (selectedLanguage == lang) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                            else Color.Transparent
+                                        )
+                                        .clickable {
+                                            selectedLanguage = lang
+                                            showLanguageMenu = false
+                                        }
+                                        .padding(horizontal = 12.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                                ) {
+                                    Text(text = lang.flag, fontSize = 24.sp)
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = lang.label,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (selectedLanguage == lang) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = when(lang) {
+                                                AppLanguage.ENGLISH -> "Universal English Localization"
+                                                AppLanguage.SPANISH -> "América Latina y España"
+                                                AppLanguage.HINDI -> "भारत और दक्षिण एशिया"
+                                                AppLanguage.GERMAN -> "Europa und Deutschland"
+                                                AppLanguage.JAPANESE -> "日本地域"
+                                                AppLanguage.PORTUGUESE -> "Brasil e Portugal"
+                                            },
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                        )
+                                    }
+                                    if (selectedLanguage == lang) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Creation Dialog Screen (Forms Charles Duhigg psychological sentence)
         if (showAddForm) {
             AddHabitDialog(
+                selectedLanguage = selectedLanguage,
                 onDismiss = { showAddForm = false },
                 onSubmit = { domain, cadence, cue, routine, reward ->
                     viewModel.createHabit(domain, cadence, cue, routine, reward)
@@ -474,6 +922,7 @@ fun DashboardScreen(
             val habitToEdit = editingHabit!!
             EditHabitDialog(
                 habit = habitToEdit,
+                selectedLanguage = selectedLanguage,
                 onDismiss = { editingHabit = null },
                 onSubmit = { updatedCue, updatedReward ->
                     viewModel.updateHabit(
@@ -1162,6 +1611,7 @@ fun DopamineCelebrationPopup(
 // Dialog form forcing Charles Duhigg's psychology sentence formulation
 @Composable
 fun AddHabitDialog(
+    selectedLanguage: AppLanguage,
     onDismiss: () -> Unit,
     onSubmit: (domain: LifeDomain, cadence: Cadence, cueText: String, routineText: String, rewardText: String) -> Unit
 ) {
@@ -1171,9 +1621,9 @@ fun AddHabitDialog(
     var cueText by remember { mutableStateOf("") }
     var routineText by remember { mutableStateOf("") }
     var rewardText by remember { mutableStateOf("") }
-
+ 
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
-
+ 
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -1204,7 +1654,7 @@ fun AddHabitDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Build Habit Loop",
+                        text = Localizations.get(selectedLanguage, "form_title"),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -1217,11 +1667,11 @@ fun AddHabitDialog(
                         Icon(imageVector = Icons.Default.Close, contentDescription = "Close form", tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                     }
                 }
-
+ 
                 // Domain Selection
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "Life Domain Target",
+                        text = Localizations.get(selectedLanguage, "domain_title"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
@@ -1243,7 +1693,7 @@ fun AddHabitDialog(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = d.name.capitalizeFirst(),
+                                    text = d.displayName,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface
@@ -1252,11 +1702,11 @@ fun AddHabitDialog(
                         }
                     }
                 }
-
+ 
                 // Cadence Selection
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "Trigger Cadence Schedule",
+                        text = Localizations.get(selectedLanguage, "cadence_title"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
@@ -1278,7 +1728,7 @@ fun AddHabitDialog(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = c.name.capitalizeFirst(),
+                                    text = c.displayName,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
@@ -1287,9 +1737,9 @@ fun AddHabitDialog(
                         }
                     }
                 }
-
+ 
                 Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
-
+ 
                 // The Duhigg Sentence Formulation Guide
                 Box(
                     modifier = Modifier
@@ -1299,21 +1749,21 @@ fun AddHabitDialog(
                         .padding(12.dp)
                 ) {
                     Text(
-                        text = "Charles Duhigg's psychology cue loop formulation:\n\"When I [Cue], I will [Routine] to enjoy [Reward].\"",
+                        text = Localizations.get(selectedLanguage, "formula_sentence"),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.primary,
                         fontFamily = FontFamily.Monospace,
                         lineHeight = 16.sp
                     )
                 }
-
+ 
                 // Sentence Fields
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
                         value = cueText,
                         onValueChange = { cueText = it },
-                        label = { Text("When I... (Cue Trigger)") },
-                        placeholder = { Text("e.g. sit down at my desk") },
+                        label = { Text(Localizations.get(selectedLanguage, "routine_label")) },
+                        placeholder = { Text(Localizations.get(selectedLanguage, "routine_placeholder")) },
                         isError = hasAttemptedSubmit && cueText.trim().isEmpty(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -1336,12 +1786,12 @@ fun AddHabitDialog(
                             }
                         }
                     )
-
+ 
                     OutlinedTextField(
                         value = routineText,
                         onValueChange = { routineText = it },
-                        label = { Text("I will... (Heuristic Routine)") },
-                        placeholder = { Text("e.g. write 100 words of journal") },
+                        label = { Text(Localizations.get(selectedLanguage, "action_label")) },
+                        placeholder = { Text(Localizations.get(selectedLanguage, "action_placeholder")) },
                         isError = hasAttemptedSubmit && routineText.trim().isEmpty(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -1364,12 +1814,12 @@ fun AddHabitDialog(
                             }
                         }
                     )
-
+ 
                     OutlinedTextField(
                         value = rewardText,
                         onValueChange = { rewardText = it },
-                        label = { Text("To enjoy... (Dopamine Reward)") },
-                        placeholder = { Text("e.g. a hot cup of black tea") },
+                        label = { Text(Localizations.get(selectedLanguage, "reward_label")) },
+                        placeholder = { Text(Localizations.get(selectedLanguage, "reward_placeholder")) },
                         isError = hasAttemptedSubmit && rewardText.trim().isEmpty(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -1393,15 +1843,15 @@ fun AddHabitDialog(
                         }
                     )
                 }
-
+ 
                 if (hasAttemptedSubmit && (cueText.isBlank() || routineText.isBlank() || rewardText.isBlank())) {
                     Text(
-                        text = "Please complete all parts of the Habit Loop.",
+                        text = Localizations.get(selectedLanguage, "fields_error"),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-
+ 
                 Button(
                     onClick = {
                         hasAttemptedSubmit = true
@@ -1415,7 +1865,7 @@ fun AddHabitDialog(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = "Instantiate Habit Loop",
+                        text = Localizations.get(selectedLanguage, "formulate_habit"),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary
@@ -1911,7 +2361,7 @@ fun YearlyHeatwaveGrid(data: List<MonthHeatwaveInfo>) {
 
 // Empty state placeholder card
 @Composable
-fun EmptyStateCard(onNewHabitClick: () -> Unit) {
+fun EmptyStateCard(selectedLanguage: AppLanguage, onNewHabitClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -1941,13 +2391,13 @@ fun EmptyStateCard(onNewHabitClick: () -> Unit) {
             
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "No Habit Loops Registered",
+                    text = Localizations.get(selectedLanguage, "empty_title"),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "AuraByte operates on Charles Duhigg's cue system. Formulate your first loop to start tracking.",
+                    text = Localizations.get(selectedLanguage, "empty_desc"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     textAlign = TextAlign.Center
@@ -1959,7 +2409,7 @@ fun EmptyStateCard(onNewHabitClick: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text("Formulate Habit Loop", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+                Text(Localizations.get(selectedLanguage, "empty_btn"), fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
             }
         }
     }
@@ -2042,13 +2492,14 @@ private fun String.capitalizeFirst(): String {
 @Composable
 fun EditHabitDialog(
     habit: Habit,
+    selectedLanguage: AppLanguage,
     onDismiss: () -> Unit,
     onSubmit: (cueText: String, rewardText: String) -> Unit
 ) {
     var cueText by remember { mutableStateOf(habit.cueText) }
     var rewardText by remember { mutableStateOf(habit.rewardText) }
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
-
+ 
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -2079,7 +2530,7 @@ fun EditHabitDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Edit Habit Loop",
+                        text = Localizations.get(selectedLanguage, "edit_dialog_title"),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -2092,7 +2543,7 @@ fun EditHabitDialog(
                         Icon(imageVector = Icons.Default.Close, contentDescription = "Close form", tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                     }
                 }
-
+ 
                 // Domain & Cadence Information (Displayed Read-Only)
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -2125,13 +2576,13 @@ fun EditHabitDialog(
                         )
                     }
                 }
-
+ 
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
-
+ 
                 // The Read-Only Title section (Heuristic Routine)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "Habit Title (Routine - Read-only)",
+                        text = Localizations.get(selectedLanguage, "edit_dialog_subtitle"),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                     )
@@ -2159,14 +2610,14 @@ fun EditHabitDialog(
                         }
                     }
                 }
-
+ 
                 // Sentence Fields (Cue and Reward are editable, Routine is locked)
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedTextField(
                         value = cueText,
                         onValueChange = { cueText = it },
-                        label = { Text("When I... (Cue Trigger)") },
-                        placeholder = { Text("e.g. sit down at my desk") },
+                        label = { Text(Localizations.get(selectedLanguage, "routine_label")) },
+                        placeholder = { Text(Localizations.get(selectedLanguage, "routine_placeholder")) },
                         isError = hasAttemptedSubmit && cueText.trim().isEmpty(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -2189,12 +2640,12 @@ fun EditHabitDialog(
                             }
                         }
                     )
-
+ 
                     OutlinedTextField(
                         value = rewardText,
                         onValueChange = { rewardText = it },
-                        label = { Text("To enjoy... (Dopamine Reward)") },
-                        placeholder = { Text("e.g. a hot cup of black tea") },
+                        label = { Text(Localizations.get(selectedLanguage, "reward_label")) },
+                        placeholder = { Text(Localizations.get(selectedLanguage, "reward_placeholder")) },
                         isError = hasAttemptedSubmit && rewardText.trim().isEmpty(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -2218,15 +2669,15 @@ fun EditHabitDialog(
                         }
                     )
                 }
-
+ 
                 if (hasAttemptedSubmit && (cueText.isBlank() || rewardText.isBlank())) {
                     Text(
-                        text = "Cue and Reward fields are required description components.",
+                        text = Localizations.get(selectedLanguage, "edit_dialog_error"),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-
+ 
                 Button(
                     onClick = {
                         hasAttemptedSubmit = true
@@ -2240,7 +2691,7 @@ fun EditHabitDialog(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = "Save Description Changes",
+                        text = Localizations.get(selectedLanguage, "save_changes"),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary
@@ -2248,5 +2699,265 @@ fun EditHabitDialog(
                 }
             }
         }
+    }
+}
+
+// App Language configuration regional definitions
+enum class AppLanguage(val label: String, val flag: String, val code: String) {
+    ENGLISH("English", "🇺🇸", "en"),
+    SPANISH("Español", "🇪🇸", "es"),
+    HINDI("हिन्दी", "🇮🇳", "hi"),
+    GERMAN("Deutsch", "🇩🇪", "de"),
+    JAPANESE("日本語", "🇯🇵", "ja"),
+    PORTUGUESE("Português", "🇧🇷", "pt")
+}
+
+// Translations mappings dictionary
+object Localizations {
+    private val strings = mapOf(
+        AppLanguage.ENGLISH to mapOf(
+            "app_title" to "AuraByte",
+            "app_subtitle" to "The habit loop constructor",
+            "share_text" to "Share Receipts",
+            "share_progress" to "Shared success on AuraByte!",
+            "all_categories" to "All Domains",
+            "search_placeholder" to "Search loops...",
+            "guide_title" to "The Habit Loop Guide",
+            "guide_subtitle" to "Charles Duhigg's psychology cue loops focus on trigger automation.",
+            "guide_content_cue" to "Trigger",
+            "guide_content_cue_desc" to "The subconscious environmental cue that signals your brain to start.",
+            "guide_content_action" to "Routine",
+            "guide_content_action_desc" to "The immediate habit reaction you execute after the environmental signal.",
+            "guide_content_reward" to "Reward",
+            "guide_content_reward_desc" to "The physical or chemical micro-dopamine payoff sealing your loop.",
+            "guide_dismiss" to "I Understand",
+            "form_title" to "Formulate Habit Loop",
+            "domain_title" to "Life Domain Target",
+            "cadence_title" to "Trigger Cadence Schedule",
+            "formula_sentence" to "Charles Duhigg's habit loop structure:\n\"When I [Cue], I will [Routine] to enjoy [Reward].\"",
+            "routine_label" to "When I... (Cue Trigger)",
+            "routine_placeholder" to "e.g. sit down at my desk",
+            "action_label" to "I will... (Heuristic Routine)",
+            "action_placeholder" to "e.g. write 100 words of journal",
+            "reward_label" to "To enjoy... (Dopamine Reward)",
+            "reward_placeholder" to "e.g. a hot cup of black tea",
+            "fields_error" to "Please complete all parts of the Habit Loop.",
+            "formulate_habit" to "Instantiate Habit Loop",
+            "edit_dialog_title" to "Refine Habit Loop",
+            "edit_dialog_subtitle" to "Heuristic Routine Title (Read-Only)",
+            "edit_dialog_error" to "Cue and Reward fields are required description elements.",
+            "save_changes" to "Save Description Changes",
+            "share_copied" to "AuraByte receipt copied to clipboard!",
+            "empty_title" to "No Habit Loops Formulated",
+            "empty_desc" to "AuraByte operates on Charles Duhigg's cue system. Formulate your first loop to start tracking.",
+            "empty_btn" to "Formulate Habit Loop",
+            "footer_author" to "Ankit Sudegora",
+            "footer_by" to "Developed by Gemini and Ankit ♥️",
+            "footer_ver" to "v2.0.0 (Global Play Store Release)"
+        ),
+        AppLanguage.SPANISH to mapOf(
+            "app_title" to "AuraByte",
+            "app_subtitle" to "El constructor de bucles de hábitos",
+            "share_text" to "Compartir logros",
+            "share_progress" to "¡Éxito compartido en AuraByte!",
+            "all_categories" to "Todos los dominios",
+            "search_placeholder" to "Buscar bucles...",
+            "guide_title" to "Guía del Bucle de Hábitos",
+            "guide_subtitle" to "Los bucles basados en la psicología de Charles Duhigg automatizan los disparadores.",
+            "guide_content_cue" to "Señal",
+            "guide_content_cue_desc" to "El disparador ambiental subconsciente que indica a tu cerebro comenzar.",
+            "guide_content_action" to "Rutina",
+            "guide_content_action_desc" to "La reacción de hábito inmediata que ejecutas tras la señal ambiental.",
+            "guide_content_reward" to "Recompensa",
+            "guide_content_reward_desc" to "La recompensa de micro-dopamina física o química que sella tu bucle.",
+            "guide_dismiss" to "Entendido",
+            "form_title" to "Formular Bucle de Hábito",
+            "domain_title" to "Objetivo del Dominio de Vida",
+            "cadence_title" to "Frecuencia del Disparador",
+            "formula_sentence" to "Estructura del bucle de hábito de Charles Duhigg:\n\"Cuando yo [Señal], haré [Rutina] para disfrutar [Recompensa].\"",
+            "routine_label" to "Cuando yo... (Señal Disparadora)",
+            "routine_placeholder" to "ej. me siente en mi escritorio",
+            "action_label" to "Haré... (Rutina Heurística)",
+            "action_placeholder" to "ej. escribir 100 palabras en mi diario",
+            "reward_label" to "Para disfrutar... (Recompensa de Dopamina)",
+            "reward_placeholder" to "ej. una taza caliente de té negro",
+            "fields_error" to "Por favor complete todas las partes del bucle de hábito.",
+            "formulate_habit" to "Instanciar Bucle de Hábito",
+            "edit_dialog_title" to "Refinar Bucle de Hábito",
+            "edit_dialog_subtitle" to "Título de la Rutina Heurística (Leer únicamente)",
+            "edit_dialog_error" to "Los campos de Señal y Recompensa son obligatorios.",
+            "save_changes" to "Guardar Cambios de Descripción",
+            "share_copied" to "¡Recibo de AuraByte copiado al portapapeles!",
+            "empty_title" to "No hay bucles de hábito registrados",
+            "empty_desc" to "AuraByte funciona según el sistema de señales de Charles Duhigg. Formula tu primer bucle para comenzar.",
+            "empty_btn" to "Formular Bucle de Hábito",
+            "footer_author" to "Ankit Sudegora",
+            "footer_by" to "Desarrollado por Gemini y Ankit ♥️",
+            "footer_ver" to "v2.0.0 (Lanzamiento Global en Play Store)"
+        ),
+        AppLanguage.HINDI to mapOf(
+            "app_title" to "AuraByte",
+            "app_subtitle" to "आदत लूप निर्माता",
+            "share_text" to "रसीद साझा करें",
+            "share_progress" to "AuraByte पर सफलता साझा की!",
+            "all_categories" to "सभी श्रेणियां",
+            "search_placeholder" to "खोजें...",
+            "guide_title" to "आदत लूप गाइड",
+            "guide_subtitle" to "चार्ल्स डुहिग के आदत मनोविज्ञान के अनुसार हर कार्य एक ट्रिगर से शुरू होता है।",
+            "guide_content_cue" to "संकेत (Cue)",
+            "guide_content_cue_desc" to "वह अवचेतन पर्यावरणीय इशारा जो आपके मस्तिष्क को शुरू करने का संकेत देता है।",
+            "guide_content_action" to "दिनचर्या (Routine)",
+            "guide_content_action_desc" to "संकेत मिलने के तुरंत बाद की जाने वाली आदत की क्रिया।",
+            "guide_content_reward" to "पुरस्कार (Reward)",
+            "guide_content_reward_desc" to "प्रसन्नता का वह अनुभव (डोपामाइन) जो इस लूप को मस्तिष्क में मजबूत करता है।",
+            "guide_dismiss" to "समझ गया",
+            "form_title" to "आदत लूप बनाएं",
+            "domain_title" to "जीवन क्षेत्र का लक्ष्य",
+            "cadence_title" to "ट्रिगर आवृत्ति शिड्यूल",
+            "formula_sentence" to "चार्ल्स डुहिग आदत लूप संरचना:\n\"जब मैं [संकेत] करूंगा, तब मैं [दिनचर्या] करूंगा ताकि मुझे [पुरस्कार] मिले।\"",
+            "routine_label" to "जब मैं... (संकेत)",
+            "routine_placeholder" to "जैसे: जब मैं डेस्क पर बैठूंगा",
+            "action_label" to "मैं करूंगा... (दिनचर्या)",
+            "action_placeholder" to "जैसे: रोज़ डायरी के 100 शब्द लिखूंगा",
+            "reward_label" to "ताकि आनंद मिले... (पुरस्कार)",
+            "reward_placeholder" to "जैसे: गर्म कड़क चाय का कप",
+            "fields_error" to "कृपया आदत लूप के सभी हिस्सों को पूरा करें।",
+            "formulate_habit" to "आदत का सृजन करें",
+            "edit_dialog_title" to "आदत लूप को बदलें",
+            "edit_dialog_subtitle" to "दिनचर्या शीर्षक (केवल पढ़ने के लिए)",
+            "edit_dialog_error" to "संकेत और पुरस्कार विवरण बदलना आवश्यक हैं।",
+            "save_changes" to "विवरण सहेजें",
+            "share_copied" to "AuraByte रिपोर्ट क्लिपबोर्ड पर कॉपी की गई!",
+            "empty_title" to "कोई आदत पंजीकृत नहीं है",
+            "empty_desc" to "AuraByte चार्ल्स डुहिग के संकेत सिद्धांत पर कार्य करता है। नए आदत लूप से शुरुआत करें।",
+            "empty_btn" to "आदत लूप तैयार करें",
+            "footer_author" to "Ankit Sudegora",
+            "footer_by" to "Gemini और Ankit ♥️ द्वारा विकसित",
+            "footer_ver" to "v2.0.0 (ग्लोबल प्ले स्टोर रिलीज)"
+        ),
+        AppLanguage.GERMAN to mapOf(
+            "app_title" to "AuraByte",
+            "app_subtitle" to "Der Gewohnheitsschleifen-Konstrukteur",
+            "share_text" to "Erfolge teilen",
+            "share_progress" to "Erfolge auf AuraByte geteilt!",
+            "all_categories" to "Alle Bereiche",
+            "search_placeholder" to "Schleifen durchsuchen...",
+            "guide_title" to "Gewohnheitsschleifen-Anleitung",
+            "guide_subtitle" to "Die psychobasierte Gewohnheitsschleife nach Charles Duhigg automatisiert Ihre Trigger.",
+            "guide_content_cue" to "Auslöser",
+            "guide_content_cue_desc" to "Der unbewusste Umweltreiz, der Ihrem Gehirn signalisiert, zu starten.",
+            "guide_content_action" to "Routine",
+            "guide_content_action_desc" to "Die unmittelbare Gewohnheitsreaktion, die Sie nach dem Signal ausführen.",
+            "guide_content_reward" to "Belohnung",
+            "guide_content_reward_desc" to "Die physische oder chemische Dopamin-Auszahlung, die Ihre Schleife festigt.",
+            "guide_dismiss" to "Verstanden",
+            "form_title" to "Gewohnheitsschleife formulieren",
+            "domain_title" to "Lebensbereich-Ziel",
+            "cadence_title" to "Häufigkeit des Triggers",
+            "formula_sentence" to "Gewohnheitsschleife nach Charles Duhigg:\n\"Wenn ich [Auslöser], werde ich [Routine], um [Belohnung] zu genießen.\"",
+            "routine_label" to "Wenn ich... (Auslöser)",
+            "routine_placeholder" to "z.B. mich an den Schreibtisch setze",
+            "action_label" to "Werde ich... (Routine)",
+            "action_placeholder" to "z.B. 100 Wörter im Tagebuch schreiben",
+            "reward_label" to "Um zu genießen... (Belohnung)",
+            "reward_placeholder" to "z.B. eine heiße Tasse schwarzen Tee",
+            "fields_error" to "Bitte füllen Sie alle Teile der Gewohnheitsschleife aus.",
+            "formulate_habit" to "Gewohnheitsschleife aktivieren",
+            "edit_dialog_title" to "Schleife anpassen",
+            "edit_dialog_subtitle" to "Routine-Titel (Schreibgeschützt)",
+            "edit_dialog_error" to "Auslöser und Belohnung sind erforderliche Beschreibungsfelder.",
+            "save_changes" to "Änderungen speichern",
+            "share_copied" to "AuraByte-Beleg in die Zwischenablage kopiert!",
+            "empty_title" to "Keine Gewohnheiten registriert",
+            "empty_desc" to "AuraByte basiert auf dem Charles-Duhigg-Signalsystem. Erstellen Sie Ihre erste Schleife.",
+            "empty_btn" to "Schleife formulieren",
+            "footer_author" to "Ankit Sudegora",
+            "footer_by" to "Entwickelt von Gemini und Ankit ♥️",
+            "footer_ver" to "v2.0.0 (Global Play Store Release)"
+        ),
+        AppLanguage.JAPANESE to mapOf(
+            "app_title" to "AuraByte",
+            "app_subtitle" to "習慣ループ・コンストラクター",
+            "share_text" to "実績を共有",
+            "share_progress" to "AuraByteで目標達成を共有しました！",
+            "all_categories" to "全ライフドメイン",
+            "search_placeholder" to "習慣ループを検索...",
+            "guide_title" to "習慣ループガイド",
+            "guide_subtitle" to "習慣を自動化するためのきっかけと報酬を設定します。",
+            "guide_content_cue" to "きっかけ (Cue)",
+            "guide_content_cue_desc" to "脳に習慣の開始を知らせる、無意識の環境的な合図。",
+            "guide_content_action" to "行動 (Routine)",
+            "guide_content_action_desc" to "合図の直後に自動的に実行する習慣アクション。",
+            "guide_content_reward" to "報酬 (Reward)",
+            "guide_content_reward_desc" to "脳にそのループを定着させる、微量なドーパミンのご褒美。",
+            "guide_dismiss" to "了解しました",
+            "form_title" to "習慣ループの策定",
+            "domain_title" to "対象ライフドメイン",
+            "cadence_title" to "スケジュール頻度",
+            "formula_sentence" to "デュヒッグ方式習慣ループの公式:\n「私は【きっかけ】の時、【行動】を行い、【報酬】を得る。」",
+            "routine_label" to "私はのとき... (きっかけ)",
+            "routine_placeholder" to "例: デスクの椅子に座ったとき",
+            "action_label" to "を行います... (行動)",
+            "action_placeholder" to "例: 日記を100文字書く",
+            "reward_label" to "を得る目標... (報酬)",
+            "reward_placeholder" to "例: 温かい紅茶を飲む",
+            "fields_error" to "すべての習慣ループ項目を入力してください。",
+            "formulate_habit" to "習慣ループを生成する",
+            "edit_dialog_title" to "習慣ループの再編集",
+            "edit_dialog_subtitle" to "行動名 (読み取り専用)",
+            "edit_dialog_error" to "きっかけと報酬は編集可能な説明項目です。",
+            "save_changes" to "説明設定を保存",
+            "share_copied" to "AuraByte実績をクリップボードにコピーしました！",
+            "empty_title" to "習慣ループが未登録です",
+            "empty_desc" to "AuraByteはチャールズ・デュヒッグ式トリガー構造を採用しています。最初のループを作ってみましょう。",
+            "empty_btn" to "習慣ループを策定",
+            "footer_author" to "Ankit Sudegora",
+            "footer_by" to "Gemini と Ankit ♥️ による開発",
+            "footer_ver" to "v2.0.0 (グローバル Playストア公開版)"
+        ),
+        AppLanguage.PORTUGUESE to mapOf(
+            "app_title" to "AuraByte",
+            "app_subtitle" to "O Construtor de Loops de Hábito",
+            "share_text" to "Compartilhar Progresso",
+            "share_progress" to "Progresso compartilhado no AuraByte!",
+            "all_categories" to "Todos os Domínios",
+            "search_placeholder" to "Buscar loops...",
+            "guide_title" to "Guia de Loops de Hábito",
+            "guide_subtitle" to "Loops psicológicos baseados em Charles Duhigg automatizam seus gatilhos.",
+            "guide_content_cue" to "Deixa",
+            "guide_content_cue_desc" to "O estímulo ambiental subconsciente que avisa seu cérebro para começar.",
+            "guide_content_action" to "Rotina",
+            "guide_content_action_desc" to "A reação imediata que você executa após o sinal do ambiente.",
+            "guide_content_reward" to "Recompensa",
+            "guide_content_reward_desc" to "A carga microquímica de dopamina que fixa a rotina no seu cérebro.",
+            "guide_dismiss" to "Entendido",
+            "form_title" to "Construir Loop de Hábito",
+            "domain_title" to "Domínio de Foco",
+            "cadence_title" to "Frequência do Gatilho",
+            "formula_sentence" to "Estrutura descrita por Charles Duhigg:\n\"Quando eu [Deixa], farei [Rotina] para desfrutar [Recompensa].\"",
+            "routine_label" to "Quando eu... (Deixa do Hábito)",
+            "routine_placeholder" to "ex: sentar na minha mesa de trabalho",
+            "action_label" to "Farei... (Rotina Diária)",
+            "action_placeholder" to "ex: escrever 100 palavras no diário",
+            "reward_label" to "Para desfrutar... (Recompensa de Dopamina)",
+            "reward_placeholder" to "ex: uma xícara quente de chá preto",
+            "fields_error" to "Por favor, complete todas as partes do loop de hábito.",
+            "formulate_habit" to "Instanciar Loop de Hábito",
+            "edit_dialog_title" to "Refinar Loop de Hábito",
+            "edit_dialog_subtitle" to "Título da Rotina (Apenas Leitura)",
+            "edit_dialog_error" to "Deixa e Recompensa são campos descritivos necessários.",
+            "save_changes" to "Salvar Alterações de Descrição",
+            "share_copied" to "Progresso do AuraByte copiado para o clipboard!",
+            "empty_title" to "Nenhum loop registrado",
+            "empty_desc" to "AuraByte opera na ciência de gatilhos de Charles Duhigg. Comece criando seu primeiro loop.",
+            "empty_btn" to "Construir Loop de Hábito",
+            "footer_author" to "Ankit Sudegora",
+            "footer_by" to "Desenvolvido por Gemini e Ankit ♥️",
+            "footer_ver" to "v2.0.0 (Lanzamiento Global Google Play)"
+        )
+    )
+
+    fun get(lang: AppLanguage, key: String): String {
+        return strings[lang]?.get(key) ?: strings[AppLanguage.ENGLISH]?.get(key) ?: ""
     }
 }
