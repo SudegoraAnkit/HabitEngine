@@ -4039,6 +4039,33 @@ fun SettingsAndFaqDialog(
         else -> "Close Settings"
     }
 
+    val githubHeader = when (selectedLanguage) {
+        AppLanguage.SPANISH -> "🐙 Código de Código Abierto"
+        AppLanguage.HINDI -> "🐙 ओपन-सोर्स कोड"
+        AppLanguage.GERMAN -> "🐙 Open-Source-Codebasis"
+        AppLanguage.JAPANESE -> "🐙 オープンソースコード"
+        AppLanguage.PORTUGUESE -> "🐙 Código Aberto (MIT)"
+        else -> "🐙 Open Source Codebase"
+    }
+
+    val githubDesc = when (selectedLanguage) {
+        AppLanguage.SPANISH -> "¡Esta aplicación es completamente de código abierto bajo la licencia MIT! Revisa, clona o dale estrellas al proyecto en GitHub."
+        AppLanguage.HINDI -> "यह ऐप एमआईटी लाइसेंस के तहत पूरी तरह से ओपन-सोर्स है! गिटहब (GitHub) पर प्रोजेक्ट को स्टार या क्लोन करें।"
+        AppLanguage.GERMAN -> "Diese App ist vollkommen open-source unter der MIT-Lizenz! Überprüfe, forke oder rate das Projekt auf GitHub."
+        AppLanguage.JAPANESE -> "このアプリはMITライセンスのオープンソースです！GitHubでリポジトリを閲覧・スター、是非フォローしてください。"
+        AppLanguage.PORTUGUESE -> "Este aplicativo é totalmente open-source sob a licença MIT! Revise, faça um fork ou dê uma estrela no GitHub."
+        else -> "This app is fully open-source under the MIT license! Review, fork, or star the project on GitHub."
+    }
+
+    val githubButtonLabel = when (selectedLanguage) {
+        AppLanguage.SPANISH -> "Repositorio GitHub"
+        AppLanguage.HINDI -> "गिटहब रिपोजिटरी"
+        AppLanguage.GERMAN -> "GitHub Repository"
+        AppLanguage.JAPANESE -> "GitHub リポジトリ"
+        AppLanguage.PORTUGUESE -> "Repositório GitHub"
+        else -> "GitHub Repository"
+    }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -4338,6 +4365,70 @@ fun SettingsAndFaqDialog(
                                     )
                                     Text(importLabel, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 }
+                            }
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // GitHub Section Card
+                val context = LocalContext.current
+                Card(
+                    modifier = Modifier.fillMaxWidth().testTag("github_section"),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = githubHeader,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = githubDesc,
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            lineHeight = 15.sp
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Button(
+                            onClick = {
+                                try {
+                                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/ankitrai-dev/habitengine"))
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    android.widget.Toast.makeText(context, "Could not open browser: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth().testTag("github_link_button"),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                                contentColor = MaterialTheme.colorScheme.onSurface
+                            ),
+                            contentPadding = PaddingValues(vertical = 8.dp),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "🐙  $githubButtonLabel",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
                     }
@@ -4757,7 +4848,106 @@ Consistently developed by Gemini and Ankit ♥️
                                 text = label,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
-                                colprivate fun getFaqItems(language: AppLanguage): List<FaqItem> {
+                                color = if (isSelected) color else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(14.dp))
+                
+                // Active Template Preview Card
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 160.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = activeTemplateText,
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily.Monospace,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
+                            lineHeight = 15.sp
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Copy Action & Close button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            try {
+                                clipboardManager.setPrimaryClip(ClipData.newPlainText("HabitEngine Achievement", activeTemplateText))
+                                Toast.makeText(context, "Copied template to clipboard! 🚀", Toast.LENGTH_SHORT).show()
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Copy failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier.weight(1f).testTag("copy_template_button"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(imageVector = Icons.Default.Share, contentDescription = "Copy icon", modifier = Modifier.size(16.dp))
+                            Text(
+                                text = when (selectedLanguage) {
+                                    AppLanguage.SPANISH -> "Copiar Plantilla"
+                                    AppLanguage.HINDI -> "कॉपी करें"
+                                    AppLanguage.GERMAN -> "Kopieren"
+                                    AppLanguage.JAPANESE -> "コピー"
+                                    AppLanguage.PORTUGUESE -> "Copiar Texto"
+                                    else -> "Copy State"
+                                },
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(0.7f),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f))
+                    ) {
+                        Text(
+                            text = when (selectedLanguage) {
+                                AppLanguage.SPANISH -> "Cerrar"
+                                AppLanguage.HINDI -> "बंद करें"
+                                AppLanguage.GERMAN -> "Schließen"
+                                AppLanguage.JAPANESE -> "戻る"
+                                AppLanguage.PORTUGUESE -> "Fechar"
+                                else -> "Dismiss"
+                            },
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun getFaqItems(language: AppLanguage): List<FaqItem> {
     return when (language) {
         AppLanguage.SPANISH -> listOf(
             FaqItem(
@@ -4988,140 +5178,6 @@ Consistently developed by Gemini and Ankit ♥️
             )
         )
     }
-}� नहीं छोड़ रहे हैं; आप अपनी असली दुनिया की ऊर्जा, आदतों और अनुशासन को साफ और पक्के डेटा बाइट्स में बदल रहे हैं।", 
-                "⚡", 
-                Color(0xFF7E57C2)
-            )
-        )
-        AppLanguage.GERMAN -> listOf(
-            FaqItem(
-                "Welche Wissenschaft steckt hinter dieser App?", 
-                "HabitEngine basiert auf einem einfachen psychologischen Trick: der Gewohnheitsschleife aus Auslöser ➔ Routine ➔ Belohnung. Statt vager Ziele wie 'mehr Sport' verknüpfst du einen klaren Auslöser ('Wenn ich um 7 Uhr meine Laufschuhe sehe') mit einer winzigen Aktion ('Ich gehe 5 Minuten raus') und belohnst dich sofort danach. So programmierst du dein Gehirn um.", 
-                "💡", 
-                Color(0xFF1565C0)
-            ),
-            FaqItem(
-                "Wie baue ich eine Gewohnheit auf, die wirklich bleibt?", 
-                "Das Geheimnis ist, lächerlich klein anzufangen und die neue Routine an Dinge zu knüpfen, die du sowieso schon automatisch tust (wie Zähneputzen oder den Laptop aufklappen). Konzentriere dich anfangs nur darauf, überhaupt aufzutauchen. Nutze unsere flexiblen Zeitpläne (Täglich, Werktage, Wochenende), um deine 'Heatwave'-Serie auszubauen, ohne auszubrennen.", 
-                "🔥", 
-                Color(0xFFEF6C00)
-            ),
-            FaqItem(
-                "Warum sollte ich mein Leben in 4 Quadranten aufteilen?", 
-                "Weil Erfolg im Job wertlos ist, wenn deine Gesundheit oder deine Beziehungen vor dem Aus stehen. HabitEngine zwingt dich dazu, deinen Alltag in vier essenziellen Bereichen zu tracken: Gesundheit, Beruf, Persönliches und Familie. Ein Realitätscheck, der dich im Gleichgewicht hält.", 
-                "⚖️", 
-                Color(0xFFE91E63)
-            ),
-            FaqItem(
-                "Wer hat die App gebaut? (Ankits Story)", 
-                "Hi, ich bin Ankit. Ich habe ewig nach einem sauberen Dark-Mode-Gewohnheitstracker gesucht, der werbefrei, absolut privat und psychologisch fundiert ist. Alles auf dem Markt war entweder überladen oder hinter einer Paywall versteckt. Also habe ich mich mit Gemini zusammengetan und HabitEngine einfach selbst gebaut. Ein komplett offline funktionierender, ablenkungsfreier Workspace—mit ♥️ gebaut für Entwickler, die einfach machen wollen.", 
-                "👨‍💻", 
-                Color(0xFF2E7D32)
-            ),
-            FaqItem(
-                "Warum heißt die App HabitEngine?", 
-                "Der Name ist eine Verschmelzung aus moderner Internetkultur und Kerninformatik. Deine 'Habit' steht für deinen Vibe, deine Energie und deinen persönlichen Fokus. Ein 'Engine' ist die grundlegende Einheit digitaler Daten. HabitEngine bedeutet, dass du dein persönliches Wachstum nicht mehr dem Zufall überlässt: Du quantifizierst deine reale Energie, deine Gewohnheiten und deine Disziplin in saubere, unveränderliche Daten-Engine.", 
-                "⚡", 
-                Color(0xFF7E57C2)
-            )
-        )
-        AppLanguage.JAPANESE -> listOf(
-            FaqItem(
-                "このアプリの仕組みは？", 
-                "HabitEngineはシンプルな心理学のハック、つまり「きっかけ ➔ 行動 ➔ ごほうび」の習慣ループに基づいています。「もっと勉強する」といった曖昧な目標を立てる代わりに、「デスクに座ったら」という明確なきっかけと「DSAを1問解く」という小さな行動を結びつけ、すぐにごほうびを与えます。これが脳の配線を変える一番の近道です。", 
-                "💡", 
-                Color(0xFF1565C0)
-            ),
-            FaqItem(
-                "本当に続く習慣を身につけるには？", 
-                "秘訣は、あきれるほど小さく始め、すでに無意識にやっていること（歯磨きやノートPCを開くなど）に新しい行動をくっつけることです。最初は「とにかく毎日やる」ことだけに集中しましょう。平日の仕事中や週末など、ライフスタイルに合わせたスケジュール設定で、燃え尽きることなく「Heatwave（継続の熱量）」を維持できます。", 
-                "🔥", 
-                Color(0xFFEF6C00)
-            ),
-            FaqItem(
-                "なぜ人生を4つのエリアに分けるのですか？", 
-                "仕事でどれだけ結果を出しても、体調を崩したり、大切な人との関係が壊れてしまっては意味がないからです。HabitEngineは「健康」「仕事」「個人」「家族」という4つの柱で日々の行動を管理します。これは、自分が今どこに偏っているのかを突きつける、人生のリアルタイムなバランス調整ツールです。", 
-                "⚖️", 
-                Color(0xFFE91E63)
-            ),
-            FaqItem(
-                "開発者はどんな人？（Ankitのストーリー）", 
-                "こんにちは、Ankitです。心理学に基づいた、広告が一切ないクリーンなダークモードの習慣トラッカーをずっと探していました。しかし、世の中にあるツールは機能が多すぎて使いづらいか、サブスク課金ばかり。それなら自分で作ろうと思い、Geminiとタッグを組んで開発したのがHabitEngineです。完全にオフラインで集中できる、目標を実行に移したい開発者のためのワークスペースを、愛を込めてお届けします ♥️", 
-                "👨‍💻", 
-                Color(0xFF2E7D32)
-            ),
-            FaqItem(
-                "なぜHabitEngine（オーラバイト）という名前なのですか？", 
-                "この名前は、現代のインターネットカルチャーとコンピュータサイエンスの核心を融合させたものです。「Habit（オーラ）」はあなたのバイブス、エネルギー、そして日々の実行力を表します。そして「Engine（バイト）」はデジタルデータの基本単位です。HabitEngineという名前には、個人の成長をあいまいにせず、現実世界でのエネルギー、習慣、そして規律を、クリーンで不変なデジタルデータとして数値化していくという意味が込められています。", 
-                "⚡", 
-                Color(0xFF7E57C2)
-            )
-        )
-        AppLanguage.PORTUGUESE -> listOf(
-            FaqItem(
-                "Qual é a ciência por trás deste app?", 
-                "O HabitEngine funciona com base em um truque psicológico simples: o loop de Gatilho ➔ Ação ➔ Recompensa. Em vez de criar metas vagas como 'estudar mais', você conecta um gatilho específico ('Quando eu sentar na mesa às 8h') a uma microação ('Vou resolver 1 problema de algoritmo') e se dá uma recompensa imediata. É assim que você reconfigura o seu cérebro pelo caminho de menor resistência.", 
-                "💡", 
-                Color(0xFF1565C0)
-            ),
-            FaqItem(
-                "Como construir um hábito que realmente dure?", 
-                "O segredo é começar ridiculamente pequeno e ancorar a nova rotina em coisas que você já faz no piloto automático (como escovar os dentes ou abrir o notebook). Esqueça a perfeição; foque apenas em aparecer todo santo dia. Use nossos cronogramas flexíveis (Diário, Dias de semana, Fins de semana) para manter o seu 'Heatwave' aceso sem se esgotar.", 
-                "🔥", 
-                Color(0xFFEF6C00)
-            ),
-            FaqItem(
-                "Por que dividir minha vida em 4 quadrantes?", 
-                "Porque não adianta nada evoluir na carreira se a sua saúde ou os seus relacionamentos estiverem desmoronando. O HabitEngine te força a acompanhar o progresso diário em quatro pilares fundamentais: Saúde, Profissional, Pessoal e Família. É um choque de realidade para te manter equilibrado e focado no que importa.", 
-                "⚖️", 
-                Color(0xFFE91E63)
-            ),
-            FaqItem(
-                "Quem desenvolveu o app? (História do Ankit)", 
-                "Fala aí, eu sou o Ankit. Passei anos procurando um rastreador de hábitos em modo escuro que fosse limpo, sem anúncios, totalmente privado e baseado em psicologia comportamental de verdade. Tudo no mercado era poluído ou cobrava assinatura. Então, juntei forças com o Gemini e montei o HabitEngine. Um espaço de trabalho offline e sem distrações—feito com muito ♥️ para desenvolvedores que querem parar de planejar e começar a executar.", 
-                "👨‍💻", 
-                Color(0xFF2E7D32)
-            ),
-            FaqItem(
-                "Por que se chama HabitEngine?", 
-                "O nome é uma fusão da cultura moderna da internet com os fundamentos da ciência da computação. Sua 'Habit' é a sua vibração, sua energia e seu estado de execução pessoal. Um 'Engine' é a unidade fundamental de dados digitais. HabitEngine significa que você não está mais deixando seu crescimento pessoal ao acaso; você está quantificando sua energia, hábitos e disciplina do mundo real em Engine de dados limpos e imutáveis.", 
-                "⚡", 
-                Color(0xFF7E57C2)
-            )
-        )
-        else -> listOf(
-            FaqItem(
-                "What's the science behind this app?", 
-                "HabitEngine is built on a simple psychological hack: the Cue ➔ Action ➔ Reward loop. Instead of setting vague resolutions like 'code more,' you anchor a concrete trigger ('When I sit down at my desk with coffee') to a tiny micro-action ('I will solve 1 DSA problem') followed by an instant reward. It rewires your brain using the path of least resistance.", 
-                "💡", 
-                Color(0xFF1565C0)
-            ),
-            FaqItem(
-                "How do I build a habit that actually sticks?", 
-                "The secret is starting stupidly small and stacking it onto things you already do without thinking (like brushing your teeth or launching your IDE). Focus entirely on just showing up every day. Use our flexible tracking schedules (Daily, Weekdays, Weekends) to run a high 'Heatwave' streak without burning yourself out.", 
-                "🔥", 
-                Color(0xFFEF6C00)
-            ),
-            FaqItem(
-                "Why divide my life into 4 quadrants?", 
-                "Because crushing your career milestones doesn't mean anything if your physical health or your relationships are actively falling apart. HabitEngine holds you accountable across four baseline dimensions: Health, Professional, Personal, and Family. It's a daily reality check to make sure you stay balanced and consistent.", 
-                "⚖️", 
-                Color(0xFFE91E63)
-            ),
-            FaqItem(
-                "Who built this? (Ankit's Story)", 
-                "Hey, I'm Ankit. I spent years looking for a crisp, minimal dark-mode habit loop tracker that was completely ad-free, secure, and based on actual behavioral psychology. Everything out there was either absolute bloatware or locked behind a monthly subscription. So, I partnered up with Gemini and built HabitEngine myself. A fully offline, distraction-free workspace—handcrafted with ♥️ for devs who just want to execute.", 
-                "👨‍💻", 
-                Color(0xFF2E7D32)
-            ),
-            FaqItem(
-                "Why is it called HabitEngine?", 
-                "The name is a fusion of modern internet culture and core computer science. Your 'Habit' is your ultimate vibe, your energy, and your personal execution state. A 'Engine' is the fundamental unit of digital data. HabitEngine means you are no longer leaving your personal growth to chance; you are quantifying your real-world energy, habits, and discipline into clean, immutable data Engine.", 
-                "⚡", 
-                Color(0xFF7E57C2)
-            )
-        )
-    }
 }
 
 private fun getLifeAreaDoc(language: AppLanguage): LifeAreaDoc {
@@ -5194,6 +5250,20 @@ private fun getLifeAreaDoc(language: AppLanguage): LifeAreaDoc {
         )
     }
 }
+
+data class FaqItem(
+    val question: String,
+    val answer: String,
+    val icon: String,
+    val categoryColor: Color
+)
+
+data class LifeAreaDoc(
+    val title: String,
+    val introduction: String,
+    val areas: List<Triple<String, String, Color>>,
+    val conclusion: String
+)
 
 @Composable
 fun CreateHabitInlineScreen(
