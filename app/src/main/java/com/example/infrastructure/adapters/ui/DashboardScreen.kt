@@ -66,6 +66,26 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.random.Random
 
+enum class DashboardTab {
+    DASHBOARD,
+    CREATE_HABIT,
+    ACTIVITY_LOGGER
+}
+
+enum class ActivitySortOption(val displayName: String) {
+    NEWEST_FIRST("⏱️ Newest First"),
+    OLDEST_FIRST("🕰️ Oldest First"),
+    DURATION_DESC("⏳ Longest"),
+    DURATION_ASC("⚡ Shortest")
+}
+
+enum class ActivityDateFilterOption(val displayName: String) {
+    ALL("📅 All Days"),
+    SELECTED_DATE("🎯 Selected Day"),
+    TODAY("☀️ Today"),
+    PAST_7_DAYS("🔄 Past 7 Days")
+}
+
 // Structure representing active particles in our dopamine canvas
 data class UiParticle(
     val id: Int,
@@ -126,6 +146,9 @@ fun DashboardScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    // Active navigation tab
+    var activeTab by rememberSaveable { mutableStateOf(DashboardTab.DASHBOARD) }
     
     // Active Regional Language Settings (Defaults to English)
     var selectedLanguage by rememberSaveable { mutableStateOf(AppLanguage.ENGLISH) }
@@ -328,23 +351,81 @@ fun DashboardScreen(
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { showAddForm = true },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.padding(bottom = 16.dp)
+                if (activeTab == DashboardTab.DASHBOARD) {
+                    FloatingActionButton(
+                        onClick = { showAddForm = true },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.padding(bottom = 16.dp).testTag("fab_add_habit")
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "New Psychological Habit")
+                    }
+                }
+            },
+            bottomBar = {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 8.dp,
+                    windowInsets = WindowInsets.navigationBars,
+                    modifier = Modifier.testTag("dashboard_bottom_navigation")
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "New Psychological Habit")
+                    val tabs = listOf(
+                        Triple(DashboardTab.DASHBOARD, Icons.Default.CheckCircle, when (selectedLanguage) {
+                            AppLanguage.SPANISH -> "Rutinas"
+                            AppLanguage.HINDI -> "डैशबोर्ड"
+                            AppLanguage.GERMAN -> "Übersicht"
+                            AppLanguage.JAPANESE -> "ダッシュボード"
+                            AppLanguage.PORTUGUESE -> "Rotinas"
+                            else -> "Dashboard"
+                        }),
+                        Triple(DashboardTab.CREATE_HABIT, Icons.Default.Add, when (selectedLanguage) {
+                            AppLanguage.SPANISH -> "Crear"
+                            AppLanguage.HINDI -> "बनाएं"
+                            AppLanguage.GERMAN -> "Erstellen"
+                            AppLanguage.JAPANESE -> "作成"
+                            AppLanguage.PORTUGUESE -> "Criar"
+                            else -> "Create"
+                        }),
+                        Triple(DashboardTab.ACTIVITY_LOGGER, Icons.Default.List, when (selectedLanguage) {
+                            AppLanguage.SPANISH -> "Actividades"
+                            AppLanguage.HINDI -> "टाइम लॉग"
+                            AppLanguage.GERMAN -> "Aktivitäten"
+                            AppLanguage.JAPANESE -> "履歴"
+                            AppLanguage.PORTUGUESE -> "Atividades"
+                            else -> "Logger"
+                        })
+                    )
+                    
+                    tabs.forEach { (tab, icon, label) ->
+                        NavigationBarItem(
+                            selected = activeTab == tab,
+                            onClick = { activeTab = tab },
+                            icon = { Icon(imageVector = icon, contentDescription = label) },
+                            label = { Text(text = label, fontWeight = FontWeight.SemiBold, fontSize = 11.sp) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            ),
+                            modifier = Modifier.testTag("tab_${tab.name.lowercase()}")
+                        )
+                    }
                 }
             },
             containerColor = Color.Transparent
         ) { innerPadding ->
-            LazyColumn(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 16.dp),
+            ) {
+                if (activeTab == DashboardTab.DASHBOARD) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 // Header calendar tester
@@ -2312,22 +2393,53 @@ fun ActivityLoggerConsole(
     var category by remember { mutableStateOf(ActivityCategory.IMPORTANT) }
     var durationMinutes by remember { mutableStateOf(30) } // default 30 min
     
-    // Filter activities for this selected date
+    var activeSort by rememberSaveable { mutableStateOf(ActivitySortOption.NEWEST_FIRST) }
+    var activeDateFilter by rememberSaveable { mutableStateOf(ActivityDateFilterOption.SELECTED_DATE) }
+    var searchQueryLogs by rememberSaveable { mutableStateOf("") }
+
     val sdf = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
-    val thisDayActivities = remember(activityLogs, selectedDate) {
-        activityLogs.filter { log ->
-            try {
-                sdf.format(java.util.Date(log.timestamp)) == selectedDate
-            } catch (e: Exception) {
-                false
+    val todayStr = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(java.util.Date()) }
+
+    val filteredActivities = remember(activityLogs, selectedDate, activeDateFilter, activeSort, searchQueryLogs) {
+        val baseList = activityLogs.filter { log ->
+            val matchesDate = when (activeDateFilter) {
+                ActivityDateFilterOption.SELECTED_DATE -> {
+                    try {
+                        sdf.format(java.util.Date(log.timestamp)) == selectedDate
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+                ActivityDateFilterOption.TODAY -> {
+                    try {
+                        sdf.format(java.util.Date(log.timestamp)) == todayStr
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+                ActivityDateFilterOption.PAST_7_DAYS -> {
+                    val msIn7Days = 7L * 24L * 60L * 60L * 1000L
+                    (System.currentTimeMillis() - log.timestamp) <= msIn7Days
+                }
+                ActivityDateFilterOption.ALL -> true
             }
-        }.sortedByDescending { it.timestamp }
+
+            val matchesSearch = searchQueryLogs.isBlank() || log.description.contains(searchQueryLogs, ignoreCase = true)
+            matchesDate && matchesSearch
+        }
+
+        when (activeSort) {
+            ActivitySortOption.NEWEST_FIRST -> baseList.sortedByDescending { it.timestamp }
+            ActivitySortOption.OLDEST_FIRST -> baseList.sortedBy { it.timestamp }
+            ActivitySortOption.DURATION_DESC -> baseList.sortedByDescending { it.durationMinutes }
+            ActivitySortOption.DURATION_ASC -> baseList.sortedBy { it.durationMinutes }
+        }
     }
     
     // Analytics calculations
-    val importantMinutes = thisDayActivities.filter { it.category == ActivityCategory.IMPORTANT }.sumOf { it.durationMinutes }
-    val wastedMinutes = thisDayActivities.filter { it.category == ActivityCategory.TIME_WASTER }.sumOf { it.durationMinutes }
-    val neutralMinutes = thisDayActivities.filter { it.category == ActivityCategory.NEUTRAL }.sumOf { it.durationMinutes }
+    val importantMinutes = filteredActivities.filter { it.category == ActivityCategory.IMPORTANT }.sumOf { it.durationMinutes }
+    val wastedMinutes = filteredActivities.filter { it.category == ActivityCategory.TIME_WASTER }.sumOf { it.durationMinutes }
+    val neutralMinutes = filteredActivities.filter { it.category == ActivityCategory.NEUTRAL }.sumOf { it.durationMinutes }
     val totalMinutes = importantMinutes + wastedMinutes + neutralMinutes
     
     val focusScore = if (importantMinutes + wastedMinutes == 0) 100 else {
@@ -2553,11 +2665,94 @@ fun ActivityLoggerConsole(
                 }
             }
             
-            // Vertically scrolling list of logged activities for selected date
-            if (thisDayActivities.isNotEmpty()) {
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+
+            // Filters & Controls Panel
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "FILTER RANGE:",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(ActivityDateFilterOption.values().toList()) { opt ->
+                        val isSelected = activeDateFilter == opt
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f))
+                                .border(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent, RoundedCornerShape(8.dp))
+                                .clickable { activeDateFilter = opt }
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text(text = opt.displayName, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                        }
+                    }
+                }
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "SORT ORDER:",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+                
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(ActivitySortOption.values().toList()) { opt ->
+                        val isSelected = activeSort == opt
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f))
+                                .border(1.dp, if (isSelected) MaterialTheme.colorScheme.secondary else Color.Transparent, RoundedCornerShape(8.dp))
+                                .clickable { activeSort = opt }
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text(text = opt.displayName, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                        }
+                    }
+                }
+
+                OutlinedTextField(
+                    value = searchQueryLogs,
+                    onValueChange = { searchQueryLogs = it },
+                    textStyle = TextStyle(fontSize = 11.sp),
+                    placeholder = { Text("Search logs by keyword...", fontSize = 11.sp) },
+                    leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search logs", modifier = Modifier.size(16.dp)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    singleLine = true
+                )
+            }
+
+            // Vertically scrolling list of logged activities
+            if (filteredActivities.isNotEmpty()) {
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
                 Text(
-                    text = "TODAY'S ACTIVITY LOGS:",
+                    text = "REVIEWS & LOGS (" + filteredActivities.size + ")",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -2566,7 +2761,8 @@ fun ActivityLoggerConsole(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val timeSdf = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
-                    thisDayActivities.forEach { log ->
+                    val dateSdf = remember { SimpleDateFormat("MMM dd", Locale.getDefault()) }
+                    filteredActivities.forEach { log ->
                         val itemColor = when (log.category) {
                             ActivityCategory.IMPORTANT -> MaterialTheme.colorScheme.primary
                             ActivityCategory.TIME_WASTER -> MaterialTheme.colorScheme.error
@@ -2606,7 +2802,11 @@ fun ActivityLoggerConsole(
                                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
                                         Text(
-                                            text = try { timeSdf.format(java.util.Date(log.timestamp)) } catch(e: Exception) { "" },
+                                            text = try {
+                                                val datePart = dateSdf.format(java.util.Date(log.timestamp))
+                                                val timePart = timeSdf.format(java.util.Date(log.timestamp))
+                                                "$datePart • $timePart"
+                                            } catch(e: Exception) { "" },
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                                         )
@@ -2634,6 +2834,13 @@ fun ActivityLoggerConsole(
                         }
                     }
                 }
+            } else {
+                Text(
+                    text = "No activities found matching criteria.",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
             }
         }
     }
