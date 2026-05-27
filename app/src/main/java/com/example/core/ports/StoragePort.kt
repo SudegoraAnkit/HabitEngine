@@ -1,5 +1,6 @@
 package com.example.core.ports
 
+import com.example.core.domain.ActivityLog
 import com.example.core.domain.Habit
 import com.example.core.domain.TrackerState
 import kotlinx.coroutines.flow.Flow
@@ -24,4 +25,28 @@ interface StoragePort {
      * Deletes a habit and all associated logs from persistent storage.
      */
     suspend fun deleteHabit(habitId: String)
+
+    /**
+     * Loads the interactive activity logs as a reactive stream.
+     */
+    fun loadActivityLogs(): Flow<List<ActivityLog>>
+
+    /**
+     * Saves or updates an activity log entry.
+     */
+    suspend fun saveActivityLog(log: ActivityLog)
+
+    /**
+     * Deletes an activity log.
+     */
+    suspend fun deleteActivityLog(id: String)
+
+    /**
+     * Clears and replaces all tracker state database entries during local backup import.
+     */
+    suspend fun restoreBackup(
+        habits: List<Habit>,
+        logs: List<com.example.infrastructure.adapters.database.LogEntity>,
+        activityLogs: List<ActivityLog>
+    )
 }

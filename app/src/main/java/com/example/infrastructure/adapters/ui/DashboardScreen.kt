@@ -49,11 +49,16 @@ import android.content.Context
 import android.content.ClipboardManager
 import android.content.ClipData
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.core.domain.Cadence
 import com.example.core.domain.Habit
 import com.example.core.domain.LifeDomain
 import com.example.core.domain.isApplicableOn
+import com.example.core.domain.ActivityLog
+import com.example.core.domain.ActivityCategory
+import androidx.compose.ui.text.TextStyle
 import com.example.ui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -80,7 +85,8 @@ data class UiParticle(
 // Data aggregation calculation function (Life Domain Command Dashboard)
 fun calculateDomainMastery(
     habits: List<Habit>,
-    logs: Map<String, Map<String, Boolean>>
+    logs: Map<String, Map<String, Boolean>>,
+    selectedDate: String
 ): Map<LifeDomain, Int> {
     val domainOpportunities = mutableMapOf<LifeDomain, Int>()
     val domainCompletions = mutableMapOf<LifeDomain, Int>()
@@ -91,17 +97,16 @@ fun calculateDomainMastery(
         domainCompletions[it] = 0
     }
     
-    // Let's compute over the logs
-    logs.forEach { (dateStr, habitCompletions) ->
-        habits.forEach { habit ->
-            if (habit.cadence.isApplicableOn(dateStr)) {
-                val domain = habit.domain
-                domainOpportunities[domain] = (domainOpportunities[domain] ?: 0) + 1
-                
-                val isCompleted = habitCompletions[habit.id] == true
-                if (isCompleted) {
-                    domainCompletions[domain] = (domainCompletions[domain] ?: 0) + 1
-                }
+    // Let's compute only for the specific selectedDate
+    val habitCompletions = logs[selectedDate] ?: emptyMap()
+    habits.forEach { habit ->
+        if (habit.cadence.isApplicableOn(selectedDate)) {
+            val domain = habit.domain
+            domainOpportunities[domain] = (domainOpportunities[domain] ?: 0) + 1
+            
+            val isCompleted = habitCompletions[habit.id] == true
+            if (isCompleted) {
+                domainCompletions[domain] = (domainCompletions[domain] ?: 0) + 1
             }
         }
     }
@@ -523,7 +528,8 @@ fun DashboardScreen(
                     CommandDashboard(
                         selectedLanguage = selectedLanguage,
                         habits = uiState.habits,
-                        logs = uiState.logs
+                        logs = uiState.logs,
+                        selectedDate = uiState.selectedDate
                     )
                 }
 
@@ -534,6 +540,21 @@ fun DashboardScreen(
                         habits = uiState.habits,
                         logs = uiState.logs,
                         selectedDate = uiState.selectedDate
+                    )
+                }
+
+                // Real-time Activity Logger & Time Audit
+                item {
+                    ActivityLoggerConsole(
+                        selectedLanguage = selectedLanguage,
+                        selectedDate = uiState.selectedDate,
+                        activityLogs = uiState.activityLogs,
+                        onCreateActivity = { desc, cat, duration ->
+                            viewModel.createActivityLog(desc, cat, duration)
+                        },
+                        onDeleteActivity = { id ->
+                            viewModel.deleteActivityLog(id)
+                        }
                     )
                 }
 
@@ -688,39 +709,94 @@ fun DashboardScreen(
                     matchesDate && matchesSearch && matchesCategory
                 }
                 
+                val goodHabits = filteredHabits.filter { !it.isBad }
+                val badHabits = filteredHabits.filter { it.isBad }
+
                 if (filteredHabits.isEmpty()) {
                     item {
                         EmptyStateCard(selectedLanguage = selectedLanguage, onNewHabitClick = { showAddForm = true })
                     }
                 } else {
-                    items(filteredHabits, key = { it.id }) { habit ->
-                        val isSelectable = habit.cadence.isApplicableOn(uiState.selectedDate)
-                        val completedMap = uiState.logs[uiState.selectedDate] ?: emptyMap()
-                        val isCompleted = completedMap[habit.id] == true
-
-                        val historyDates = getPast7Days(uiState.selectedDate)
-                        val history = historyDates.map { date ->
-                            val dayCompletions = uiState.logs[date] ?: emptyMap()
-                            dayCompletions[habit.id] == true
+                    if (goodHabits.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Actionable Routines (Good Habits) 🌸",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                            )
                         }
+                        items(goodHabits, key = { it.id }) { habit ->
+                            val isSelectable = habit.cadence.isApplicableOn(uiState.selectedDate)
+                            val completedMap = uiState.logs[uiState.selectedDate] ?: emptyMap()
+                            val isCompleted = completedMap[habit.id] == true
 
-                        HabitCard(
-                            selectedLanguage = selectedLanguage,
-                            habit = habit,
-                            isCompleted = isCompleted,
-                            isSelectable = isSelectable,
-                            selectedDate = uiState.selectedDate,
-                            history = history,
-                            onToggle = { clickX, clickY ->
-                                viewModel.toggleHabitCompletion(habit.id, isCompleted, clickX, clickY)
-                            },
-                            onDelete = {
-                                viewModel.deleteHabit(habit.id)
-                            },
-                            onEdit = {
-                                editingHabit = habit
+                            val historyDates = getPast7Days(uiState.selectedDate)
+                            val history = historyDates.map { date ->
+                                val dayCompletions = uiState.logs[date] ?: emptyMap()
+                                dayCompletions[habit.id] == true
                             }
-                        )
+
+                            HabitCard(
+                                selectedLanguage = selectedLanguage,
+                                habit = habit,
+                                isCompleted = isCompleted,
+                                isSelectable = isSelectable,
+                                selectedDate = uiState.selectedDate,
+                                history = history,
+                                onToggle = { clickX, clickY ->
+                                    viewModel.toggleHabitCompletion(habit.id, isCompleted, clickX, clickY)
+                                },
+                                onDelete = {
+                                    viewModel.deleteHabit(habit.id)
+                                },
+                                onEdit = {
+                                    editingHabit = habit
+                                }
+                            )
+                        }
+                    }
+
+                    if (badHabits.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Avoidance & Impulse Control (Bad Habits) 🛡️",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(top = 20.dp, bottom = 8.dp)
+                            )
+                        }
+                        items(badHabits, key = { it.id }) { habit ->
+                            val isSelectable = habit.cadence.isApplicableOn(uiState.selectedDate)
+                            val completedMap = uiState.logs[uiState.selectedDate] ?: emptyMap()
+                            val isCompleted = completedMap[habit.id] == true
+
+                            val historyDates = getPast7Days(uiState.selectedDate)
+                            val history = historyDates.map { date ->
+                                val dayCompletions = uiState.logs[date] ?: emptyMap()
+                                dayCompletions[habit.id] == true
+                            }
+
+                            HabitCard(
+                                selectedLanguage = selectedLanguage,
+                                habit = habit,
+                                isCompleted = isCompleted,
+                                isSelectable = isSelectable,
+                                selectedDate = uiState.selectedDate,
+                                history = history,
+                                onToggle = { clickX, clickY ->
+                                    viewModel.toggleHabitCompletion(habit.id, isCompleted, clickX, clickY)
+                                },
+                                onDelete = {
+                                    viewModel.deleteHabit(habit.id)
+                                },
+                                onEdit = {
+                                    editingHabit = habit
+                                }
+                            )
+                        }
                     }
                 }
                 
@@ -892,8 +968,8 @@ fun DashboardScreen(
             AddHabitDialog(
                 selectedLanguage = selectedLanguage,
                 onDismiss = { showAddForm = false },
-                onSubmit = { domain, cadence, cue, routine, reward ->
-                    viewModel.createHabit(domain, cadence, cue, routine, reward)
+                onSubmit = { domain, cadence, cue, routine, reward, notes, isBad ->
+                    viewModel.createHabit(domain, cadence, cue, routine, reward, notes, isBad)
                     showAddForm = false
                 }
             )
@@ -905,19 +981,59 @@ fun DashboardScreen(
                 habit = habitToEdit,
                 selectedLanguage = selectedLanguage,
                 onDismiss = { editingHabit = null },
-                onSubmit = { updatedCue, updatedReward ->
+                onSubmit = { updatedDomain, updatedCue, updatedReward, updatedNotes, updatedIsBad ->
                     viewModel.updateHabit(
                         habitId = habitToEdit.id,
-                        domain = habitToEdit.domain,
+                        domain = updatedDomain,
                         cadence = habitToEdit.cadence,
                         cueText = updatedCue,
                         routineText = habitToEdit.routineText,
                         rewardText = updatedReward,
-                        createdAt = habitToEdit.createdAt
+                        createdAt = habitToEdit.createdAt,
+                        notes = updatedNotes,
+                        isBad = updatedIsBad
                     )
                     editingHabit = null
                 }
             )
+        }
+
+        val context = LocalContext.current
+        val exportLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.CreateDocument("application/json")
+        ) { uri ->
+            if (uri != null) {
+                try {
+                    val jsonString = viewModel.exportBackupAsJson()
+                    context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                        outputStream.write(jsonString.toByteArray(Charsets.UTF_8))
+                    }
+                    Toast.makeText(context, "Backup saved to device!", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        val importLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri ->
+            if (uri != null) {
+                try {
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        val jsonString = inputStream.bufferedReader().use { it.readText() }
+                        viewModel.restoreBackupFromJson(jsonString) { success ->
+                            if (success) {
+                                Toast.makeText(context, "Backup restored successfully!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Failed to restore backup format.", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Import failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
         }
 
         if (showSettingsAndFaq) {
@@ -925,6 +1041,8 @@ fun DashboardScreen(
                 selectedLanguage = selectedLanguage,
                 showTutorialGuide = showTutorialGuide,
                 onToggleTutorialGuide = { showTutorialGuide = it },
+                onExportBackup = { exportLauncher.launch("aurabyte_backup_${System.currentTimeMillis()}.json") },
+                onImportBackup = { importLauncher.launch(arrayOf("application/json", "application/octet-stream")) },
                 onDismiss = { showSettingsAndFaq = false }
             )
         }
@@ -1007,11 +1125,12 @@ fun DateCard(
 fun CommandDashboard(
     selectedLanguage: AppLanguage,
     habits: List<Habit>,
-    logs: Map<String, Map<String, Boolean>>
+    logs: Map<String, Map<String, Boolean>>,
+    selectedDate: String
 ) {
     // Perform data aggregation mapping
-    val masteryMap = remember(habits, logs) {
-        calculateDomainMastery(habits, logs)
+    val masteryMap = remember(habits, logs, selectedDate) {
+        calculateDomainMastery(habits, logs, selectedDate)
     }
 
     Card(
@@ -1268,12 +1387,24 @@ fun HabitCard(
             .fillMaxWidth()
             .alpha(if (isSelectable) 1.0f else 0.4f),
         colors = CardDefaults.cardColors(
-            containerColor = if (isCompleted) MaterialTheme.colorScheme.primary.copy(alpha = 0.04f) else MaterialTheme.colorScheme.surface
+            containerColor = if (isCompleted) {
+                if (habit.isBad) Color(0xFF10B981).copy(alpha = 0.07f)
+                else MaterialTheme.colorScheme.primary.copy(alpha = 0.04f)
+            } else {
+                if (habit.isBad) MaterialTheme.colorScheme.error.copy(alpha = 0.015f)
+                else MaterialTheme.colorScheme.surface
+            }
         ),
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(
             1.dp,
-            if (isCompleted) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+            if (isCompleted) {
+                if (habit.isBad) Color(0xFF10B981).copy(alpha = 0.3f)
+                else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            } else {
+                if (habit.isBad) MaterialTheme.colorScheme.error.copy(alpha = 0.18f)
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+            }
         )
     ) {
         Column(
@@ -1307,14 +1438,15 @@ fun HabitCard(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
+                            maxLines = if (expanded) 4 else 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = habit.domain.displayName,
+                                text = if (habit.isBad) "AVOIDANCE 🛡️" else habit.domain.displayName,
                                 fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                color = if (habit.isBad) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                fontWeight = if (habit.isBad) FontWeight.Bold else FontWeight.Normal
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
@@ -1350,11 +1482,20 @@ fun HabitCard(
                             .size(36.dp)
                             .clip(RoundedCornerShape(8.dp))
                             .background(
-                                if (isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                                if (isCompleted) {
+                                    if (habit.isBad) Color(0xFF10B981)
+                                    else MaterialTheme.colorScheme.primary
+                                } else {
+                                    if (habit.isBad) MaterialTheme.colorScheme.error.copy(alpha = 0.08f)
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                                }
                             )
                             .border(
                                 1.dp,
-                                if (isCompleted) Color.Transparent else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
+                                if (isCompleted) Color.Transparent else {
+                                    if (habit.isBad) MaterialTheme.colorScheme.error.copy(alpha = 0.45f)
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f)
+                                },
                                 RoundedCornerShape(8.dp)
                             )
                             // Retrieve relative coordinates of tap inside tap gestures detector
@@ -1399,17 +1540,15 @@ fun HabitCard(
                 }
             }
 
-            // Expanded Habit loop showing the Charles Duhigg formula
-            val expandTransition = updateTransition(targetState = expanded, label = "expand")
-            val contentAlpha by expandTransition.animateFloat(label = "alpha") { if (it) 1f else 0f }
-            val contentHeight by expandTransition.animateDp(label = "height") { if (it) 164.dp else 0.dp }
-
-            if (expanded || contentHeight > 0.dp) {
+            // Expanded Habit loop showing the Charles Duhigg formula and notes
+            AnimatedVisibility(
+                visible = expanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(contentHeight)
-                        .alpha(contentAlpha)
                         .padding(top = 12.dp)
                 ) {
                     Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
@@ -1439,7 +1578,31 @@ fun HabitCard(
                         }
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
+                    if (habit.notes.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.03f))
+                                .padding(8.dp)
+                        ) {
+                            Text(
+                                text = "Notes / Context:",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = habit.notes,
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1664,10 +1827,12 @@ fun DopamineCelebrationPopup(
 fun AddHabitDialog(
     selectedLanguage: AppLanguage,
     onDismiss: () -> Unit,
-    onSubmit: (domain: LifeDomain, cadence: Cadence, cueText: String, routineText: String, rewardText: String) -> Unit
+    onSubmit: (domain: LifeDomain, cadence: Cadence, cueText: String, routineText: String, rewardText: String, notesText: String, isBad: Boolean) -> Unit
 ) {
     var domain by remember { mutableStateOf(LifeDomain.HEALTH) }
     var cadence by remember { mutableStateOf(Cadence.DAILY) }
+    var notesText by remember { mutableStateOf("") }
+    var isBad by remember { mutableStateOf(false) }
     
     var cueText by remember { mutableStateOf("") }
     var routineText by remember { mutableStateOf("") }
@@ -1788,6 +1953,54 @@ fun AddHabitDialog(
                         }
                     }
                 }
+
+                // Habit Type Selection (Good vs Bad)
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "Habit Type:",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (!isBad) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                                )
+                                .border(
+                                    if (!isBad) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else BorderStroke(0.dp, Color.Transparent),
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .clickable { isBad = false }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "Routine (Good Habit) 🌸", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (!isBad) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (isBad) MaterialTheme.colorScheme.error.copy(alpha = 0.12f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                                )
+                                .border(
+                                    if (isBad) BorderStroke(1.dp, MaterialTheme.colorScheme.error) else BorderStroke(0.dp, Color.Transparent),
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .clickable { isBad = true }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "Avoidance (Bad Habit) 🛡️", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (isBad) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
+                }
  
                 Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
  
@@ -1813,9 +2026,8 @@ fun AddHabitDialog(
                     OutlinedTextField(
                         value = cueText,
                         onValueChange = { cueText = it },
-                        label = { Text(Localizations.get(selectedLanguage, "routine_label")) },
+                        label = { Text(Localizations.get(selectedLanguage, "routine_label") + " (Optional)") },
                         placeholder = { Text(Localizations.get(selectedLanguage, "routine_placeholder")) },
-                        isError = hasAttemptedSubmit && cueText.trim().isEmpty(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         keyboardOptions = KeyboardOptions(
@@ -1869,9 +2081,24 @@ fun AddHabitDialog(
                     OutlinedTextField(
                         value = rewardText,
                         onValueChange = { rewardText = it },
-                        label = { Text(Localizations.get(selectedLanguage, "reward_label")) },
+                        label = { Text(Localizations.get(selectedLanguage, "reward_label") + " (Optional)") },
                         placeholder = { Text(Localizations.get(selectedLanguage, "reward_placeholder")) },
-                        isError = hasAttemptedSubmit && rewardText.trim().isEmpty(),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        )
+                    )
+
+                    OutlinedTextField(
+                        value = notesText,
+                        onValueChange = { notesText = it },
+                        label = { Text("Personal Notes / Tips / Avoidance Strategy") },
+                        placeholder = { Text("e.g. Put phone in drawer, start small with 2 mins...") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         keyboardOptions = KeyboardOptions(
@@ -1880,24 +2107,13 @@ fun AddHabitDialog(
                         ),
                         keyboardActions = KeyboardActions(
                             onDone = { focusManager.clearFocus() }
-                        ),
-                        trailingIcon = {
-                            if (rewardText.isNotEmpty()) {
-                                IconButton(onClick = { focusManager.clearFocus() }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Done,
-                                        contentDescription = "Hide Keyboard",
-                                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                                    )
-                                }
-                            }
-                        }
+                        )
                     )
                 }
  
-                if (hasAttemptedSubmit && (cueText.isBlank() || routineText.isBlank() || rewardText.isBlank())) {
+                if (hasAttemptedSubmit && routineText.isBlank()) {
                     Text(
-                        text = Localizations.get(selectedLanguage, "fields_error"),
+                        text = "The habit name/action cannot be blank.",
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -1906,9 +2122,9 @@ fun AddHabitDialog(
                 Button(
                     onClick = {
                         hasAttemptedSubmit = true
-                        if (cueText.isNotBlank() && routineText.isNotBlank() && rewardText.isNotBlank()) {
+                        if (routineText.isNotBlank()) {
                             focusManager.clearFocus()
-                            onSubmit(domain, cadence, cueText, routineText, rewardText)
+                            onSubmit(domain, cadence, cueText, routineText, rewardText, notesText, isBad)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -2082,6 +2298,345 @@ private fun getPastYearHeatwave(
         // Fallback
     }
     return result
+}
+
+@Composable
+fun ActivityLoggerConsole(
+    selectedLanguage: AppLanguage,
+    selectedDate: String,
+    activityLogs: List<ActivityLog>,
+    onCreateActivity: (String, ActivityCategory, Int) -> Unit,
+    onDeleteActivity: (String) -> Unit
+) {
+    var description by remember { mutableStateOf("") }
+    var category by remember { mutableStateOf(ActivityCategory.IMPORTANT) }
+    var durationMinutes by remember { mutableStateOf(30) } // default 30 min
+    
+    // Filter activities for this selected date
+    val sdf = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
+    val thisDayActivities = remember(activityLogs, selectedDate) {
+        activityLogs.filter { log ->
+            try {
+                sdf.format(java.util.Date(log.timestamp)) == selectedDate
+            } catch (e: Exception) {
+                false
+            }
+        }.sortedByDescending { it.timestamp }
+    }
+    
+    // Analytics calculations
+    val importantMinutes = thisDayActivities.filter { it.category == ActivityCategory.IMPORTANT }.sumOf { it.durationMinutes }
+    val wastedMinutes = thisDayActivities.filter { it.category == ActivityCategory.TIME_WASTER }.sumOf { it.durationMinutes }
+    val neutralMinutes = thisDayActivities.filter { it.category == ActivityCategory.NEUTRAL }.sumOf { it.durationMinutes }
+    val totalMinutes = importantMinutes + wastedMinutes + neutralMinutes
+    
+    val focusScore = if (importantMinutes + wastedMinutes == 0) 100 else {
+        ((importantMinutes.toFloat() / (importantMinutes + wastedMinutes).toFloat()) * 100).toInt()
+    }
+    
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Header with stats
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Real-time Time Audit & Focus Analyzer ⚡",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Audit your time to eliminate toxic habits.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                }
+            }
+            
+            // Dynamic Stats Panel
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.025f))
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Circular Focus Gauge
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(
+                            when {
+                                focusScore >= 75 -> Color(0xFF10B981).copy(alpha = 0.15f)
+                                focusScore >= 40 -> Color(0xFFF59E0B).copy(alpha = 0.15f)
+                                else -> MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "$focusScore%",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = when {
+                                focusScore >= 75 -> Color(0xFF10B981)
+                                focusScore >= 40 -> Color(0xFFF59E0B)
+                                else -> MaterialTheme.colorScheme.error
+                            }
+                        )
+                        Text(
+                            text = "Score",
+                            fontSize = 8.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                    }
+                }
+                
+                // Textual Breakdowns
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Deep Focus / Important:", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                        Text("${importantMinutes}m", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Time Wasted / Drifts:", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                        Text("${wastedMinutes}m", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Routine / Neutral Tasks:", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+                        Text("${neutralMinutes}m", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
+                    }
+                }
+            }
+            
+            // Inline Add Activity Dialog Form Controls
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = "LOG RUNTIME ACTIVITY:",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    placeholder = { Text("e.g. Studying, browsing reels, gym, meditation...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    textStyle = TextStyle(fontSize = 13.sp),
+                    singleLine = true
+                )
+                
+                // Category click badges
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    listOf(
+                        ActivityCategory.IMPORTANT,
+                        ActivityCategory.TIME_WASTER,
+                        ActivityCategory.NEUTRAL
+                    ).forEach { cat ->
+                        val isSelected = category == cat
+                        val catColor = when (cat) {
+                            ActivityCategory.IMPORTANT -> MaterialTheme.colorScheme.primary
+                            ActivityCategory.TIME_WASTER -> MaterialTheme.colorScheme.error
+                            ActivityCategory.NEUTRAL -> MaterialTheme.colorScheme.secondary
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (isSelected) catColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f)
+                                )
+                                .border(
+                                    1.dp,
+                                    if (isSelected) catColor else Color.Transparent,
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .clickable { category = cat }
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = cat.displayName,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) catColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+                
+                // Stepper for duration
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Duration: $durationMinutes minutes",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    )
+                    
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        IconButton(
+                            onClick = { if (durationMinutes > 5) durationMinutes -= 5 },
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                        ) {
+                            Text("-", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        }
+                        IconButton(
+                            onClick = { durationMinutes += 5 },
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                        ) {
+                            Text("+", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        }
+                    }
+                }
+                
+                Button(
+                    onClick = {
+                        if (description.isNotBlank()) {
+                            onCreateActivity(description.trim(), category, durationMinutes)
+                            description = ""
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Add timestamped activity log ⚡", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+            
+            // Vertically scrolling list of logged activities for selected date
+            if (thisDayActivities.isNotEmpty()) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                Text(
+                    text = "TODAY'S ACTIVITY LOGS:",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val timeSdf = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
+                    thisDayActivities.forEach { log ->
+                        val itemColor = when (log.category) {
+                            ActivityCategory.IMPORTANT -> MaterialTheme.colorScheme.primary
+                            ActivityCategory.TIME_WASTER -> MaterialTheme.colorScheme.error
+                            ActivityCategory.NEUTRAL -> MaterialTheme.colorScheme.secondary
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(itemColor.copy(alpha = 0.03f))
+                                .border(1.dp, itemColor.copy(alpha = 0.1f), RoundedCornerShape(8.dp))
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                // Bullet node
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(itemColor)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = log.description,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text(
+                                            text = try { timeSdf.format(java.util.Date(log.timestamp)) } catch(e: Exception) { "" },
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                        )
+                                        Text("•", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+                                        Text(
+                                            text = "${log.durationMinutes} min",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.secondary
+                                        )
+                                    }
+                                }
+                            }
+                            IconButton(
+                                onClick = { onDeleteActivity(log.id) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Log",
+                                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                                    modifier = Modifier.size(12.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 // AuraByte Heatwave Consistency Dashboard
@@ -2582,8 +3137,12 @@ fun EditHabitDialog(
     habit: Habit,
     selectedLanguage: AppLanguage,
     onDismiss: () -> Unit,
-    onSubmit: (cueText: String, rewardText: String) -> Unit
+    onSubmit: (domain: LifeDomain, cueText: String, rewardText: String, notesText: String, isBad: Boolean) -> Unit
 ) {
+    var selectedDomain by remember { mutableStateOf(habit.domain) }
+    var notesText by remember { mutableStateOf(habit.notes) }
+    var isBad by remember { mutableStateOf(habit.isBad) }
+
     var cueText by remember { mutableStateOf(habit.cueText) }
     var rewardText by remember { mutableStateOf(habit.rewardText) }
     var hasAttemptedSubmit by remember { mutableStateOf(false) }
@@ -2632,39 +3191,89 @@ fun EditHabitDialog(
                     }
                 }
  
-                // Domain & Cadence Information (Displayed Read-Only)
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(getDomainColor(habit.domain).copy(alpha = 0.2f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                // Domain (Life Area) Selection Header (Interactive Editor!)
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "Change Life Area Focus:",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(
-                            text = habit.domain.displayName,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = getDomainColor(habit.domain)
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = habit.cadence.displayName,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.secondary
-                        )
+                        LifeDomain.values().forEach { d ->
+                            val isSelected = selectedDomain == d
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                        if (isSelected) getDomainColor(d).copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                                    )
+                                    .clickable { selectedDomain = d }
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = d.displayName,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
                     }
                 }
- 
+
+                // Habit Type Selection (Good vs Bad)
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "Habit Type:",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (!isBad) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                                )
+                                .border(
+                                    if (!isBad) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else BorderStroke(0.dp, Color.Transparent),
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .clickable { isBad = false }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "Routines (Good Habit) 🌸", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (!isBad) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (isBad) MaterialTheme.colorScheme.error.copy(alpha = 0.12f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                                )
+                                .border(
+                                    if (isBad) BorderStroke(1.dp, MaterialTheme.colorScheme.error) else BorderStroke(0.dp, Color.Transparent),
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .clickable { isBad = true }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "Avoidance (Bad Habit) 🛡️", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (isBad) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
+                        }
+                    }
+                }
+
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
  
                 // The Read-Only Title section (Heuristic Routine)
@@ -2704,9 +3313,8 @@ fun EditHabitDialog(
                     OutlinedTextField(
                         value = cueText,
                         onValueChange = { cueText = it },
-                        label = { Text(Localizations.get(selectedLanguage, "routine_label")) },
+                        label = { Text(Localizations.get(selectedLanguage, "routine_label") + " (Optional)") },
                         placeholder = { Text(Localizations.get(selectedLanguage, "routine_placeholder")) },
-                        isError = hasAttemptedSubmit && cueText.trim().isEmpty(),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         keyboardOptions = KeyboardOptions(
@@ -2715,26 +3323,30 @@ fun EditHabitDialog(
                         ),
                         keyboardActions = KeyboardActions(
                             onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                        ),
-                        trailingIcon = {
-                            if (cueText.isNotEmpty()) {
-                                IconButton(onClick = { focusManager.clearFocus() }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Done,
-                                        contentDescription = "Hide Keyboard",
-                                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                                    )
-                                }
-                            }
-                        }
+                        )
                     )
  
                     OutlinedTextField(
                         value = rewardText,
                         onValueChange = { rewardText = it },
-                        label = { Text(Localizations.get(selectedLanguage, "reward_label")) },
+                        label = { Text(Localizations.get(selectedLanguage, "reward_label") + " (Optional)") },
                         placeholder = { Text(Localizations.get(selectedLanguage, "reward_placeholder")) },
-                        isError = hasAttemptedSubmit && rewardText.trim().isEmpty(),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Next
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        )
+                    )
+ 
+                    OutlinedTextField(
+                        value = notesText,
+                        onValueChange = { notesText = it },
+                        label = { Text("Personal Notes / Tips / Avoidance Strategy") },
+                        placeholder = { Text("e.g. Put phone in drawer, start small with 2 mins...") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         keyboardOptions = KeyboardOptions(
@@ -2743,36 +3355,15 @@ fun EditHabitDialog(
                         ),
                         keyboardActions = KeyboardActions(
                             onDone = { focusManager.clearFocus() }
-                        ),
-                        trailingIcon = {
-                            if (rewardText.isNotEmpty()) {
-                                IconButton(onClick = { focusManager.clearFocus() }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Done,
-                                        contentDescription = "Hide Keyboard",
-                                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                                    )
-                                }
-                            }
-                        }
-                    )
-                }
- 
-                if (hasAttemptedSubmit && (cueText.isBlank() || rewardText.isBlank())) {
-                    Text(
-                        text = Localizations.get(selectedLanguage, "edit_dialog_error"),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
+                        )
                     )
                 }
  
                 Button(
                     onClick = {
                         hasAttemptedSubmit = true
-                        if (cueText.isNotBlank() && rewardText.isNotBlank()) {
-                            focusManager.clearFocus()
-                            onSubmit(cueText, rewardText)
-                        }
+                        focusManager.clearFocus()
+                        onSubmit(selectedDomain, cueText, rewardText, notesText, isBad)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
@@ -3110,6 +3701,8 @@ fun SettingsAndFaqDialog(
     selectedLanguage: AppLanguage,
     showTutorialGuide: Boolean,
     onToggleTutorialGuide: (Boolean) -> Unit,
+    onExportBackup: () -> Unit,
+    onImportBackup: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -3118,6 +3711,42 @@ fun SettingsAndFaqDialog(
     
     val faqItems = getFaqItems(selectedLanguage)
     val doc = getLifeAreaDoc(selectedLanguage)
+
+    val backupHeader = when (selectedLanguage) {
+        AppLanguage.SPANISH -> "💾 Copia de Seguridad"
+        AppLanguage.HINDI -> "💾 स्थानीय डिवाइस बैकअप"
+        AppLanguage.GERMAN -> "💾 Lokales Geräte-Backup"
+        AppLanguage.JAPANESE -> "💾 ローカルバックアップ"
+        AppLanguage.PORTUGUESE -> "💾 Backup do Dispositivo"
+        else -> "💾 Local Device Backup"
+    }
+
+    val backupDesc = when (selectedLanguage) {
+        AppLanguage.SPANISH -> "Exporta tus hábitos e historial a un archivo JSON o restáuralos desde una copia previa."
+        AppLanguage.HINDI -> "अपनी आदतों, लॉग और इतिहास को JSON फ़ाइल में सहेजें या पूर्व बैकअप से पुनर्स्थापित करें।"
+        AppLanguage.GERMAN -> "Exportieren Sie Ihre Gewohnheiten in eine JSON-Datei oder stellen Sie sie wieder her."
+        AppLanguage.JAPANESE -> "習慣と履歴をJSONファイルにエクスポート、または既存の物から復元を行います。"
+        AppLanguage.PORTUGUESE -> "Exporte seus hábitos e histórico para um arquivo JSON ou restaure de uma cópia prévia."
+        else -> "Export your habits and history to a JSON file or restore from a previous backup on your device."
+    }
+
+    val exportLabel = when (selectedLanguage) {
+        AppLanguage.SPANISH -> "Exportar"
+        AppLanguage.HINDI -> "निर्यात करें"
+        AppLanguage.GERMAN -> "Backup erstellen"
+        AppLanguage.JAPANESE -> "エクスポート"
+        AppLanguage.PORTUGUESE -> "Exportar Cópia"
+        else -> "Export Backup"
+    }
+
+    val importLabel = when (selectedLanguage) {
+        AppLanguage.SPANISH -> "Importar"
+        AppLanguage.HINDI -> "आयात करें"
+        AppLanguage.GERMAN -> "Backup einspielen"
+        AppLanguage.JAPANESE -> "インポート"
+        AppLanguage.PORTUGUESE -> "Importar Cópia"
+        else -> "Import Backup"
+    }
     
     val settingsTitle = when (selectedLanguage) {
         AppLanguage.SPANISH -> "Ajustes de AuraByte"
@@ -3392,6 +4021,82 @@ fun SettingsAndFaqDialog(
                 
                 Spacer(modifier = Modifier.height(14.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f))
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Local Backup Section
+                Card(
+                    modifier = Modifier.fillMaxWidth().testTag("local_backup_section"),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Text(
+                            text = backupHeader,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontFamily = FontFamily.Monospace
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = backupDesc,
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            lineHeight = 15.sp
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Button(
+                                onClick = onExportBackup,
+                                modifier = Modifier.weight(1f).testTag("export_backup_button"),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                ),
+                                contentPadding = PaddingValues(vertical = 8.dp),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        contentDescription = "Export icon",
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Text(exportLabel, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+
+                            FilledTonalButton(
+                                onClick = onImportBackup,
+                                modifier = Modifier.weight(1f).testTag("import_backup_button"),
+                                contentPadding = PaddingValues(vertical = 8.dp),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = "Import icon",
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Text(importLabel, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+                
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 // Bottom control actions: Interactive Switch

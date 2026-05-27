@@ -39,7 +39,30 @@ data class Habit(
     val cueText: String,
     val routineText: String,
     val rewardText: String,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val notes: String = "",
+    val isBad: Boolean = false
+)
+
+enum class ActivityCategory {
+    IMPORTANT,
+    TIME_WASTER,
+    NEUTRAL;
+
+    val displayName: String
+        get() = when (this) {
+            IMPORTANT -> "Important"
+            TIME_WASTER -> "Time Waster"
+            NEUTRAL -> "Neutral / Routine"
+        }
+}
+
+data class ActivityLog(
+    val id: String,
+    val description: String,
+    val category: ActivityCategory,
+    val timestamp: Long,
+    val durationMinutes: Int = 0
 )
 
 data class DayLog(
