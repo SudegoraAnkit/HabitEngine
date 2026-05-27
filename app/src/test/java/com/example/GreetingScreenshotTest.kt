@@ -3,7 +3,7 @@ package com.example
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
-import com.example.ui.theme.AuraByteTheme
+import com.example.ui.theme.HabitEngineTheme
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
@@ -23,8 +23,8 @@ class GreetingScreenshotTest {
   @Test
   fun greeting_screenshot() {
     composeTestRule.setContent { 
-        AuraByteTheme { 
-            Text("AuraByte Premium Habit Engine Foundation Active") 
+        HabitEngineTheme { 
+            Text("HabitEngine Premium Habit Engine Foundation Active") 
         } 
     }
 

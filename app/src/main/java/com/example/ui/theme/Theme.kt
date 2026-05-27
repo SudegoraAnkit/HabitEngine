@@ -32,7 +32,7 @@ private val SunsetColorScheme = darkColorScheme(
 )
 
 @Composable
-fun AuraByteTheme(
+fun HabitEngineTheme(
     themeMode: ThemeMode = ThemeMode.CYBERPUNK,
     content: @Composable () -> Unit
 ) {

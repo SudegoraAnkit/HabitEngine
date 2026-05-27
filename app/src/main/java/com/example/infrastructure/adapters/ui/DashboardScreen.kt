@@ -350,19 +350,7 @@ fun DashboardScreen(
                     }
                 )
             },
-            floatingActionButton = {
-                if (activeTab == DashboardTab.DASHBOARD) {
-                    FloatingActionButton(
-                        onClick = { showAddForm = true },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.padding(bottom = 16.dp).testTag("fab_add_habit")
-                    ) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = "New Psychological Habit")
-                    }
-                }
-            },
+
             bottomBar = {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surface,
@@ -635,7 +623,8 @@ fun DashboardScreen(
                         },
                         onDeleteActivity = { id ->
                             viewModel.deleteActivityLog(id)
-                        }
+                        },
+                        showCreateForm = false
                     )
                 }
 
@@ -795,7 +784,7 @@ fun DashboardScreen(
 
                 if (filteredHabits.isEmpty()) {
                     item {
-                        EmptyStateCard(selectedLanguage = selectedLanguage, onNewHabitClick = { showAddForm = true })
+                        EmptyStateCard(selectedLanguage = selectedLanguage, onNewHabitClick = { activeTab = DashboardTab.CREATE_HABIT })
                     }
                 } else {
                     if (goodHabits.isNotEmpty()) {
@@ -2434,7 +2423,8 @@ fun ActivityLoggerConsole(
     selectedDate: String,
     activityLogs: List<ActivityLog>,
     onCreateActivity: (String, ActivityCategory, Int) -> Unit,
-    onDeleteActivity: (String) -> Unit
+    onDeleteActivity: (String) -> Unit,
+    showCreateForm: Boolean = true
 ) {
     var description by remember { mutableStateOf("") }
     var category by remember { mutableStateOf(ActivityCategory.IMPORTANT) }
@@ -2599,120 +2589,122 @@ fun ActivityLoggerConsole(
             }
             
             // Inline Add Activity Dialog Form Controls
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    text = "LOG RUNTIME ACTIVITY:",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    placeholder = { Text("e.g. Studying, browsing reels, gym, meditation...") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    textStyle = TextStyle(fontSize = 13.sp),
-                    singleLine = true
-                )
-                
-                // Category click badges
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    listOf(
-                        ActivityCategory.IMPORTANT,
-                        ActivityCategory.TIME_WASTER,
-                        ActivityCategory.NEUTRAL
-                    ).forEach { cat ->
-                        val isSelected = category == cat
-                        val catColor = when (cat) {
-                            ActivityCategory.IMPORTANT -> MaterialTheme.colorScheme.primary
-                            ActivityCategory.TIME_WASTER -> MaterialTheme.colorScheme.error
-                            ActivityCategory.NEUTRAL -> MaterialTheme.colorScheme.secondary
-                        }
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(
-                                    if (isSelected) catColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f)
-                                )
-                                .border(
-                                    1.dp,
-                                    if (isSelected) catColor else Color.Transparent,
-                                    RoundedCornerShape(8.dp)
-                                )
-                                .clickable { category = cat }
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = cat.displayName,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isSelected) catColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                        }
-                    }
-                }
-                
-                // Stepper for duration
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+            if (showCreateForm) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "Duration: $durationMinutes minutes",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        text = "LOG RUNTIME ACTIVITY:",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                     
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        placeholder = { Text("e.g. Studying, browsing reels, gym, meditation...") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        textStyle = TextStyle(fontSize = 13.sp),
+                        singleLine = true
+                    )
+                    
+                    // Category click badges
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        IconButton(
-                            onClick = { if (durationMinutes > 5) durationMinutes -= 5 },
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
-                        ) {
-                            Text("-", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        listOf(
+                            ActivityCategory.IMPORTANT,
+                            ActivityCategory.TIME_WASTER,
+                            ActivityCategory.NEUTRAL
+                        ).forEach { cat ->
+                            val isSelected = category == cat
+                            val catColor = when (cat) {
+                                ActivityCategory.IMPORTANT -> MaterialTheme.colorScheme.primary
+                                ActivityCategory.TIME_WASTER -> MaterialTheme.colorScheme.error
+                                ActivityCategory.NEUTRAL -> MaterialTheme.colorScheme.secondary
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                        if (isSelected) catColor.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f)
+                                    )
+                                    .border(
+                                        1.dp,
+                                        if (isSelected) catColor else Color.Transparent,
+                                        RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable { category = cat }
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = cat.displayName,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) catColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
                         }
-                        IconButton(
-                            onClick = { durationMinutes += 5 },
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                    }
+                    
+                    // Stepper for duration
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Duration: $durationMinutes minutes",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        )
+                        
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text("+", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            IconButton(
+                                onClick = { if (durationMinutes > 5) durationMinutes -= 5 },
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                            ) {
+                                Text("-", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            }
+                            IconButton(
+                                onClick = { durationMinutes += 5 },
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                            ) {
+                                Text("+", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            }
                         }
+                    }
+                    
+                    Button(
+                        onClick = {
+                            if (description.isNotBlank()) {
+                                onCreateActivity(description.trim(), category, durationMinutes)
+                                description = ""
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Text("Add timestamped activity log ⚡", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
                 
-                Button(
-                    onClick = {
-                        if (description.isNotBlank()) {
-                            onCreateActivity(description.trim(), category, durationMinutes)
-                            description = ""
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Text("Add timestamped activity log ⚡", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
             }
-            
-            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
 
             // Filters & Controls Panel
             Column(

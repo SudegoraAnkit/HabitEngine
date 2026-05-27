@@ -18,7 +18,7 @@ import com.example.infrastructure.adapters.database.AppDatabase
 import com.example.infrastructure.adapters.database.RoomStorageAdapter
 import com.example.infrastructure.adapters.ui.DashboardScreen
 import com.example.infrastructure.adapters.ui.HabitViewModel
-import com.example.ui.theme.AuraByteTheme
+import com.example.ui.theme.HabitEngineTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
             val uiState by viewModel.uiState.collectAsState()
 
             // 5. Apply adaptive custom Theme (Cyberpunk Focus / Sunset Calm)
-            AuraByteTheme(themeMode = uiState.themeMode) {
+            HabitEngineTheme(themeMode = uiState.themeMode) {
                 Scaffold(
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
