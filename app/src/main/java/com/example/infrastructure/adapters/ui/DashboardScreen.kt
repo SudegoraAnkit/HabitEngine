@@ -602,7 +602,7 @@ fun DashboardScreen(
                     )
                 }
 
-                // AuraByte Heatwave Analytics Monitor
+                // HabitEngine Heatwave Analytics Monitor
                 item {
                     HeatwaveDashboard(
                         selectedLanguage = selectedLanguage,
@@ -1156,7 +1156,7 @@ fun DashboardScreen(
                 selectedLanguage = selectedLanguage,
                 showTutorialGuide = showTutorialGuide,
                 onToggleTutorialGuide = { showTutorialGuide = it },
-                onExportBackup = { exportLauncher.launch("aurabyte_backup_${System.currentTimeMillis()}.json") },
+                onExportBackup = { exportLauncher.launch("HabitEngine_backup_${System.currentTimeMillis()}.json") },
                 onImportBackup = { importLauncher.launch(arrayOf("application/json", "application/octet-stream")) },
                 onDismiss = { showSettingsAndFaq = false }
             )
@@ -2885,7 +2885,7 @@ fun ActivityLoggerConsole(
     }
 }
 
-// AuraByte Heatwave Consistency Dashboard
+// HabitEngine Heatwave Consistency Dashboard
 @Composable
 fun HeatwaveDashboard(
     selectedLanguage: AppLanguage,
@@ -3641,7 +3641,7 @@ enum class AppLanguage(val label: String, val flag: String, val code: String) {
 object Localizations {
     private val strings = mapOf(
         AppLanguage.ENGLISH to mapOf(
-            "app_title" to "AuraByte",
+            "app_title" to "HabitEngine",
             "app_subtitle" to "Your companion for building positive habits",
             "share_text" to "Share Receipts",
             "share_progress" to "Celebrating my daily habit progress!",
@@ -3672,7 +3672,7 @@ object Localizations {
             "edit_dialog_subtitle" to "The Action (Immutable)",
             "edit_dialog_error" to "Please fill out both the trigger and reward fields.",
             "save_changes" to "Save Options",
-            "share_copied" to "AuraByte progress copied to clipboard!",
+            "share_copied" to "HabitEngine progress copied to clipboard!",
             "empty_title" to "Your Habit Journey Starts Here",
             "empty_desc" to "You haven't built any habit loops yet. Let's construct a simple trigger, action, and reward to get going!",
             "empty_btn" to "Create My First Loop",
@@ -3690,7 +3690,7 @@ object Localizations {
             "status_thriving" to "Thriving!"
         ),
         AppLanguage.SPANISH to mapOf(
-            "app_title" to "AuraByte",
+            "app_title" to "HabitEngine",
             "app_subtitle" to "Tu compañero para crear hábitos positivos",
             "share_text" to "Compartir logros",
             "share_progress" to "¡Celebrando mi progreso diario!",
@@ -3721,7 +3721,7 @@ object Localizations {
             "edit_dialog_subtitle" to "La Acción (Solo lectura)",
             "edit_dialog_error" to "Por favor complete los campos de Señal y Recompensa.",
             "save_changes" to "Guardar Cambios",
-            "share_copied" to "¡Progreso de AuraByte copiado al portapapeles!",
+            "share_copied" to "¡Progreso de HabitEngine copiado al portapapeles!",
             "empty_title" to "Tu viaje de hábitos comienza aquí",
             "empty_desc" to "No has creado hábitos todavía. ¡Vamos a crear tu primera rutina positiva!",
             "empty_btn" to "Crear mi primer hábito",
@@ -3739,7 +3739,7 @@ object Localizations {
             "status_thriving" to "¡Excelente!"
         ),
         AppLanguage.HINDI to mapOf(
-            "app_title" to "AuraByte",
+            "app_title" to "HabitEngine",
             "app_subtitle" to "आदत निर्माण में आपका सच्चा साथी",
             "share_text" to "रसीद साझा करें",
             "share_progress" to "मेरी दैनिक सफलता साझा की जा रही है!",
@@ -3770,7 +3770,7 @@ object Localizations {
             "edit_dialog_subtitle" to "दिनचर्या शीर्षक (केवल पढ़ने के लिए)",
             "edit_dialog_error" to "संकेत और पुरस्कार विवरण बदलना आवश्यक हैं।",
             "save_changes" to "विवरण सहेजें",
-            "share_copied" to "AuraByte रिपोर्ट क्लिपबोर्ड पर कॉपी की गई!",
+            "share_copied" to "HabitEngine रिपोर्ट क्लिपबोर्ड पर कॉपी की गई!",
             "empty_title" to "आपकी आदत यात्रा यहाँ से शुरू होती है",
             "empty_desc" to "आपने अभी तक कोई आदत नहीं बनाई है। चलिए शुरुआत करते हैं!",
             "empty_btn" to "पहल करें",
@@ -3788,7 +3788,7 @@ object Localizations {
             "status_thriving" to "शानदार!"
         ),
         AppLanguage.GERMAN to mapOf(
-            "app_title" to "AuraByte",
+            "app_title" to "HabitEngine",
             "app_subtitle" to "Ihr Partner für positive Gewohnheiten",
             "share_text" to "Erfolge teilen",
             "share_progress" to "Tägliche Erfolge geteilt!",
@@ -3819,7 +3819,7 @@ object Localizations {
             "edit_dialog_subtitle" to "Routine (Schreibgeschützt)",
             "edit_dialog_error" to "Auslöser und Belohnung sind erforderlich.",
             "save_changes" to "Speichern",
-            "share_copied" to "AuraByte-Beleg in die Zwischenablage kopiert!",
+            "share_copied" to "HabitEngine-Beleg in die Zwischenablage kopiert!",
             "empty_title" to "Ihre Gewohnheits-Reise beginnt hier",
             "empty_desc" to "Sie haben noch keine Gewohnheiten erstellt. Fangen wir an!",
             "empty_btn" to "Erste Gewohnheit erstellen",
@@ -3837,7 +3837,7 @@ object Localizations {
             "status_thriving" to "Hervorragend!"
         ),
         AppLanguage.JAPANESE to mapOf(
-            "app_title" to "AuraByte",
+            "app_title" to "HabitEngine",
             "app_subtitle" to "習慣づくりのための頼れるサポーター",
             "share_text" to "実績を共有",
             "share_progress" to "今日の成果を共有しました！",
@@ -3868,7 +3868,7 @@ object Localizations {
             "edit_dialog_subtitle" to "行動 (編集不可)",
             "edit_dialog_error" to "きっかけとごほうびを入力してください。",
             "save_changes" to "設定を保存",
-            "share_copied" to "AuraByte実績をクリップボードにコピーしました！",
+            "share_copied" to "HabitEngine実績をクリップボードにコピーしました！",
             "empty_title" to "習慣づくりの旅を始めましょう",
             "empty_desc" to "まだ習慣が登録されていません。最初のハッピー習慣をつくってみませんか？",
             "empty_btn" to "最初の習慣を作る",
@@ -3886,7 +3886,7 @@ object Localizations {
             "status_thriving" to "素晴らしい！"
         ),
         AppLanguage.PORTUGUESE to mapOf(
-            "app_title" to "AuraByte",
+            "app_title" to "HabitEngine",
             "app_subtitle" to "Seu companheiro para construir hábitos positivos",
             "share_text" to "Compartilhar Progresso",
             "share_progress" to "Celebrando meu progresso diário!",
@@ -3917,7 +3917,7 @@ object Localizations {
             "edit_dialog_subtitle" to "A Ação (Apenas leitura)",
             "edit_dialog_error" to "Os campos de gatilho e recompensa são obrigatórios.",
             "save_changes" to "Salvar alterações",
-            "share_copied" to "Progresso do AuraByte copiado para o clipboard!",
+            "share_copied" to "Progresso do HabitEngine copiado para o clipboard!",
             "empty_title" to "Sua jornada de hábitos começa aqui",
             "empty_desc" to "Você ainda não tem hábitos criados. Vamos criar seu primeiro hábito positivo!",
             "empty_btn" to "Criar meu primeiro hábito",
@@ -3995,12 +3995,12 @@ fun SettingsAndFaqDialog(
     }
     
     val settingsTitle = when (selectedLanguage) {
-        AppLanguage.SPANISH -> "Ajustes de AuraByte"
-        AppLanguage.HINDI -> "AuraByte सेटिंग्स"
-        AppLanguage.GERMAN -> "AuraByte-Einstellungen"
-        AppLanguage.JAPANESE -> "AuraByte 設定"
-        AppLanguage.PORTUGUESE -> "Configurações do AuraByte"
-        else -> "AuraByte Settings & FAQs"
+        AppLanguage.SPANISH -> "Ajustes de HabitEngine"
+        AppLanguage.HINDI -> "HabitEngine सेटिंग्स"
+        AppLanguage.GERMAN -> "HabitEngine-Einstellungen"
+        AppLanguage.JAPANESE -> "HabitEngine 設定"
+        AppLanguage.PORTUGUESE -> "Configurações do HabitEngine"
+        else -> "HabitEngine Settings & FAQs"
     }
     
     val faqTabLabel = when (selectedLanguage) {
@@ -4440,36 +4440,36 @@ fun calculateCurrentStreak(logs: Map<String, Map<String, Boolean>>, selectedDate
 private fun getInstagramTemplate(percentage: Int, streak: Int, url: String, lang: AppLanguage): String {
     val nonZeroStreak = if (streak > 0) streak else 1
     return when (lang) {
-        AppLanguage.SPANISH -> "Bytes de disciplina, bloque a bloque. 🚀 Equilibrando mis 4 cuadrantes con AuraByte de la psicología de bucle de Charles Duhigg. Sin fricción, pura ejecución. ⚡️\n\n📊 Nivel diario: $percentage% completado\n🔥 Racha Heatwave: $nonZeroStreak días\n\nOptimiza tu rutina diaria y equilibra tu vida de forma offline: $url\n\n#AuraByte #BucleDeHabitos #Productividad #Disciplina #Desarrolladores"
-        AppLanguage.HINDI -> "अनुशासन के बाइट्स, ब्लॉक दर ब्लॉक। 🚀 आज मैंने चार्ल्स डुहिंग के हैबिट लूप की मदद से अपने जीवन के ४ क्षेत्रों को संतुलित किया। कोई बहाना नहीं, सिर्फ फोकस। ⚡️\n\n📊 दैनिक स्तर: $percentage% पूरा हुआ\n🔥 हीटवेव स्ट्रीक: $nonZeroStreak दिन\n\nअपने रूटीन को अपग्रेड करें और जीवन में संतुलन पाएं: $url\n\n#AuraByte #HabitLoop #SelfDiscipline #Focus #HindiDevs"
-        AppLanguage.GERMAN -> "Disziplin-Bytes, Stein für Stein. 🚀 Heute habe ich meine 4 Lebensquadranten mit AuraByte nach der Gewohnheitspsychologie von Charles Duhigg ausbalanciert. Keine Ausreden, nur Ausführung. ⚡️\n\n📊 Tages-Level: $percentage% abgeschlossen\n🔥 Heatwave-Serie: $nonZeroStreak Tage\n\nOptimiere deine Routinen und bringe Balance in dein Leben: $url\n\n#AuraByte #HabitLoop #Produktivität #Disziplin #DevLife"
-        AppLanguage.JAPANESE -> "規律の積み重ね、1日1歩。🚀 チャールズ・デュヒッグ式習慣ループを活用して、AuraByteで人生の4つの柱のバランスを整えました。摩擦ゼロ、圧倒的実行力。⚡️\n\n📊 今日のフォーカス率: $percentage% 達成\n🔥 継続の熱量（Heatwave）: $nonZeroStreak 日連続\n\n習慣ルーティンワークスペースを最適化しましょう。AuraByteをダウンロード: $url\n\n#AuraByte #習慣ループ #ハック #自己管理 #デベロッパー"
-        AppLanguage.PORTUGUESE -> "Bytes de disciplina, bloco por bloco. 🚀 Equilibrei meus 4 quadrantes de vida hoje com o AuraByte, baseado no loop de hábitos de Charles Duhigg. Sem desculpas, apenas execução. ⚡️\n\n📊 Nível diário: $percentage% concluído\n🔥 Streak de calor (Heatwave): $nonZeroStreak dias\n\nTurbine seus hábitos e equilibre sua vida: $url\n\n#AuraByte #LoopDeHabitos #Foco #Produtividade #Devs"
-        else -> "Bytes of discipline, block by block. 🚀 Managed my 4 life quadrants today with AuraByte of Charles Duhigg behavior loops. No friction, just pure execution. ⚡️\n\n📊 Daily level: $percentage% completed\n🔥 Heatwave Streak: $nonZeroStreak days\n\nCheck out my routine workspace and balance your life. Download AuraByte at: $url\n\n#AuraByte #HabitLoop #DevDiscipline #BuildingInPublic #Productivity"
+        AppLanguage.SPANISH -> "Engine de disciplina, bloque a bloque. 🚀 Equilibrando mis 4 cuadrantes con HabitEngine de la psicología de bucle de Charles Duhigg. Sin fricción, pura ejecución. ⚡️\n\n📊 Nivel diario: $percentage% completado\n🔥 Racha Heatwave: $nonZeroStreak días\n\nOptimiza tu rutina diaria y equilibra tu vida de forma offline: $url\n\n#HabitEngine #BucleDeHabitos #Productividad #Disciplina #Desarrolladores"
+        AppLanguage.HINDI -> "अनुशासन के बाइट्स, ब्लॉक दर ब्लॉक। 🚀 आज मैंने चार्ल्स डुहिंग के हैबिट लूप की मदद से अपने जीवन के ४ क्षेत्रों को संतुलित किया। कोई बहाना नहीं, सिर्फ फोकस। ⚡️\n\n📊 दैनिक स्तर: $percentage% पूरा हुआ\n🔥 हीटवेव स्ट्रीक: $nonZeroStreak दिन\n\nअपने रूटीन को अपग्रेड करें और जीवन में संतुलन पाएं: $url\n\n#HabitEngine #HabitLoop #SelfDiscipline #Focus #HindiDevs"
+        AppLanguage.GERMAN -> "Disziplin-Engine, Stein für Stein. 🚀 Heute habe ich meine 4 Lebensquadranten mit HabitEngine nach der Gewohnheitspsychologie von Charles Duhigg ausbalanciert. Keine Ausreden, nur Ausführung. ⚡️\n\n📊 Tages-Level: $percentage% abgeschlossen\n🔥 Heatwave-Serie: $nonZeroStreak Tage\n\nOptimiere deine Routinen und bringe Balance in dein Leben: $url\n\n#HabitEngine #HabitLoop #Produktivität #Disziplin #DevLife"
+        AppLanguage.JAPANESE -> "規律の積み重ね、1日1歩。🚀 チャールズ・デュヒッグ式習慣ループを活用して、HabitEngineで人生の4つの柱のバランスを整えました。摩擦ゼロ、圧倒的実行力。⚡️\n\n📊 今日のフォーカス率: $percentage% 達成\n🔥 継続の熱量（Heatwave）: $nonZeroStreak 日連続\n\n習慣ルーティンワークスペースを最適化しましょう。HabitEngineをダウンロード: $url\n\n#HabitEngine #習慣ループ #ハック #自己管理 #デベロッパー"
+        AppLanguage.PORTUGUESE -> "Engine de disciplina, bloco por bloco. 🚀 Equilibrei meus 4 quadrantes de vida hoje com o HabitEngine, baseado no loop de hábitos de Charles Duhigg. Sem desculpas, apenas execução. ⚡️\n\n📊 Nível diário: $percentage% concluído\n🔥 Streak de calor (Heatwave): $nonZeroStreak dias\n\nTurbine seus hábitos e equilibre sua vida: $url\n\n#HabitEngine #LoopDeHabitos #Foco #Produtividade #Devs"
+        else -> "Engine of discipline, block by block. 🚀 Managed my 4 life quadrants today with HabitEngine of Charles Duhigg behavior loops. No friction, just pure execution. ⚡️\n\n📊 Daily level: $percentage% completed\n🔥 Heatwave Streak: $nonZeroStreak days\n\nCheck out my routine workspace and balance your life. Download HabitEngine at: $url\n\n#HabitEngine #HabitLoop #DevDiscipline #BuildingInPublic #Productivity"
     }
 }
 
 private fun getWhatsappTemplate(percentage: Int, streak: Int, date: String, completedList: String, url: String, lang: AppLanguage): String {
     val nonZeroStreak = if (streak > 0) streak else 1
     return when (lang) {
-        AppLanguage.SPANISH -> "🏆 *AuraByte | Mi Progreso de Hábitos* 🏆\n📅 *Fecha*: $date\n🔥 *Racha actual*: $nonZeroStreak Días\n📊 *Nivel de enfoque*: $percentage%\n\n*Cuadrantes completados hoy:*\n$completedList\n\nManteniéndome firme con el bucle de hábitos de Charles Duhigg. \n⚡️ Construye hábitos permanentes sin anuncios y 100% offline.\n🔗 Descarga AuraByte aquí: $url"
-        AppLanguage.HINDI -> "🏆 *AuraByte | मेरी आदतों का प्रोग्रेस* 🏆\n📅 *दिनांक*: $date\n🔥 *वर्तमान स्ट्रीक*: $nonZeroStreak दिन\n📊 *दैनिक फोकस लेवल*: $percentage%\n\n*आज पूरे किए गए क्षेत्र:*\n$completedList\n\nचार्ल्स डुहिंग के हैबिट लूप आर्किटेक्चर के साथ निरंतर बने रहें।\n⚡️ बिना विज्ञापनों और बिना इंटरनेट के अपनी आदतें सुधारें।\n🔗 AuraByte प्राप्त करें: $url"
-        AppLanguage.GERMAN -> "🏆 *AuraByte | Mein Gewohnheits-Fortschritt* 🏆\n📅 *Datum*: $date\n🔥 *Aktuelle Serie*: $nonZeroStreak Tage\n📊 *Fokus-Level heute*: $percentage%\n\n*Meine abgeschlossenen Quadranten:*\n$completedList\n\nKonsequentes Tracking durch Charles Duhiggs Verhaltensarchitektur. \n⚡️ Baue dauerhafte Gewohnheiten auf – werbefrei und offline.\n🔗 AuraByte herunterladen unter: $url"
-        AppLanguage.JAPANESE -> "🏆 *AuraByte | 今日の習慣ログ* 🏆\n📅 *日程*: $date\n🔥 *継続日数（Streak）*: $nonZeroStreak 日連続\n📊 *今日のフォーカス度*: $percentage%\n\n*本日クリアした領域:*\n$completedList\n\n脳心理学に基づいたハックで日常を圧倒的自動化。\n⚡️ 広告なし・完全オフライン・究極のプライベート習慣トラッカー。\n🔗 AuraByte を今すぐ入手: $url"
-        AppLanguage.PORTUGUESE -> "🏆 *AuraByte | Meu Progresso de Hábitos* 🏆\n📅 *Data*: $date\n🔥 *Streak atual*: $nonZeroStreak Dias\n📊 *Nível de Foco*: $percentage%\n\n*Quadrantes concluídos hoje:*\n$completedList\n\nMantendo a consistência pelo método comportamental de Charles Duhigg.\n⚡️ Crie rotinas permanentes sem comerciais e 100% offline.\n🔗 Baixe o AuraByte em: $url"
-        else -> "🏆 *AuraByte | My Habit Loop Progress* 🏆\n📅 *Date*: $date\n🔥 *Current Streak*: $nonZeroStreak Days\n📊 *Today's Focus Level*: $percentage%\n\n*My Completed Quadrants today:*\n$completedList\n\nConsistently tracking via Charles Duhigg behavioral architecture. \n⚡️ Start building habits that stick. No ads, fully offline, private. \n🔗 Get AuraByte at: $url"
+        AppLanguage.SPANISH -> "🏆 *HabitEngine | Mi Progreso de Hábitos* 🏆\n📅 *Fecha*: $date\n🔥 *Racha actual*: $nonZeroStreak Días\n📊 *Nivel de enfoque*: $percentage%\n\n*Cuadrantes completados hoy:*\n$completedList\n\nManteniéndome firme con el bucle de hábitos de Charles Duhigg. \n⚡️ Construye hábitos permanentes sin anuncios y 100% offline.\n🔗 Descarga HabitEngine aquí: $url"
+        AppLanguage.HINDI -> "🏆 *HabitEngine | मेरी आदतों का प्रोग्रेस* 🏆\n📅 *दिनांक*: $date\n🔥 *वर्तमान स्ट्रीक*: $nonZeroStreak दिन\n📊 *दैनिक फोकस लेवल*: $percentage%\n\n*आज पूरे किए गए क्षेत्र:*\n$completedList\n\nचार्ल्स डुहिंग के हैबिट लूप आर्किटेक्चर के साथ निरंतर बने रहें।\n⚡️ बिना विज्ञापनों और बिना इंटरनेट के अपनी आदतें सुधारें।\n🔗 HabitEngine प्राप्त करें: $url"
+        AppLanguage.GERMAN -> "🏆 *HabitEngine | Mein Gewohnheits-Fortschritt* 🏆\n📅 *Datum*: $date\n🔥 *Aktuelle Serie*: $nonZeroStreak Tage\n📊 *Fokus-Level heute*: $percentage%\n\n*Meine abgeschlossenen Quadranten:*\n$completedList\n\nKonsequentes Tracking durch Charles Duhiggs Verhaltensarchitektur. \n⚡️ Baue dauerhafte Gewohnheiten auf – werbefrei und offline.\n🔗 HabitEngine herunterladen unter: $url"
+        AppLanguage.JAPANESE -> "🏆 *HabitEngine | 今日の習慣ログ* 🏆\n📅 *日程*: $date\n🔥 *継続日数（Streak）*: $nonZeroStreak 日連続\n📊 *今日のフォーカス度*: $percentage%\n\n*本日クリアした領域:*\n$completedList\n\n脳心理学に基づいたハックで日常を圧倒的自動化。\n⚡️ 広告なし・完全オフライン・究極のプライベート習慣トラッカー。\n🔗 HabitEngine を今すぐ入手: $url"
+        AppLanguage.PORTUGUESE -> "🏆 *HabitEngine | Meu Progresso de Hábitos* 🏆\n📅 *Data*: $date\n🔥 *Streak atual*: $nonZeroStreak Dias\n📊 *Nível de Foco*: $percentage%\n\n*Quadrantes concluídos hoje:*\n$completedList\n\nMantendo a consistência pelo método comportamental de Charles Duhigg.\n⚡️ Crie rotinas permanentes sem comerciais e 100% offline.\n🔗 Baixe o HabitEngine em: $url"
+        else -> "🏆 *HabitEngine | My Habit Loop Progress* 🏆\n📅 *Date*: $date\n🔥 *Current Streak*: $nonZeroStreak Days\n📊 *Today's Focus Level*: $percentage%\n\n*My Completed Quadrants today:*\n$completedList\n\nConsistently tracking via Charles Duhigg behavioral architecture. \n⚡️ Start building habits that stick. No ads, fully offline, private. \n🔗 Get HabitEngine at: $url"
     }
 }
 
 private fun getFacebookTemplate(percentage: Int, streak: Int, url: String, lang: AppLanguage): String {
     val nonZeroStreak = if (streak > 0) streak else 1
     return when (lang) {
-        AppLanguage.SPANISH -> "La constancia es la ventaja competitiva definitiva. Hoy logré completar el $percentage% de mis rutinas de hábito en AuraByte, equilibrando los cuatro cuadrantes clave de la vida: Salud, Profesional, Personal y Familia.\n\nCon $nonZeroStreak días consecutivos de ejecución enfocada (Heatwave 🔥), compruebo que los bucles de comportamiento correctos generan cambios a largo plazo. Sin atajos, solo crecimiento compuesto.\n\n¿Qué estás ejecutando hoy? 💡\nOptimiza tu vida offline de manera privada y sin anuncios: $url"
-        AppLanguage.HINDI -> "निरंतरता ही सबसे बड़ी ताकत है। आज मैंने AuraByte की मदद से अपने चारों प्रमुख जीवन स्तंभों (स्वास्थ्य, पेशेवर, व्यक्तिगत और परिवार) में संतुलन बनाते हुए $percentage% काम पूरा किया।\n\nलगातार $nonZeroStreak दिनों के फोकस्ड काम (Heatwave 🔥) के साथ, मैं साबित कर रहा हूँ कि सही हैबिट लूप दीर्घकालिक परिणाम देते हैं। कोई शार्टकट नहीं, सिर्फ रोज़ाना की प्रगति।\n\nआप आज क्या शुरू कर रहे हैं? 💡\nअपने जीवन को पूरी तरह ऑफलाइन और विज्ञापन-मुक्त सुरक्षित रूप से संतुलित करें: $url"
-        AppLanguage.GERMAN -> "Beständigkeit ist der ultimative Wettbewerbsvorteil. Heute habe ich $percentage% meiner Gewohnheitsroutinen mit AuraByte erreicht und meine Fortschritte in den vier entscheidenden Lebensquadranten verfolgt: Gesundheit, Beruf, Persönlich und Familie.\n\nMit $nonZeroStreak aufeinanderfolgenden Tagen fokussierter Ausführung (Heatwave 🔥) beweise ich, dass ehrliche Verhaltensschleifen langfristige Systeme aufbauen. Kein schneller Hack, nur Zinseszins-Wachstum.\n\nWas setzt du heute um? 💡\nBringe Struktur in deinen Tag – offline, sicher und werbefrei: $url"
-        AppLanguage.JAPANESE -> "「継続」こそが、人生における究極の競争優位性です。今日、AuraByteのルーティンワークスペースを活用して、健康、仕事、個人、家族という「人生の4つの重要な柱」のタスクを $percentage% クリアしました。\n\n$nonZeroStreak 日間連続でフォーカス（Heatwave 🔥）を実行したことで、正しい行動ループが長期的な習慣システムを構築することを証明しています。奇をてらわず、毎日の複利の力を信じるインクリメンタルな成長。\n\nあなたは今日、何を実行しますか？ 💡\nオフライン＆プライベートで、気を散らさずに最高の1日を設計しましょう: $url"
-        AppLanguage.PORTUGUESE -> "A consistência é o maior diferencial competitivo de todos. Hoje concluí $percentage% das minhas rotinas no AuraByte, monitorando meu progresso nos quatro quadrantes cruciais do viver: Saúde, Carreira, Mente e Família.\n\nCom $nonZeroStreak dias consecutivos de foco ativo (Heatwave 🔥), provo que bons loops comportamentais geram resultados de longo prazo de verdade. Sem milagres, apenas crescimento acumulado.\n\nO que você vai executar hoje? 💡\nOtimize o seu dia totalmente offline, seguro e livre de anúncios: $url"
-        else -> "Consistency is the ultimate competitive advantage. Today I managed to hit $percentage% on my habit routine workspace with AuraByte, tracking my progress across the four crucial life quadrants: Health, Professional, Personal, and Family. \n\nWith $nonZeroStreak consecutive days of focused execution (Heatwave 🔥), I am proving that standard behavior loops build long-term systems. No quick hacks, just compound growth.\n\nWhat are you executing today? 💡\nOptimize your day offline, secure, and ad-free: $url"
+        AppLanguage.SPANISH -> "La constancia es la ventaja competitiva definitiva. Hoy logré completar el $percentage% de mis rutinas de hábito en HabitEngine, equilibrando los cuatro cuadrantes clave de la vida: Salud, Profesional, Personal y Familia.\n\nCon $nonZeroStreak días consecutivos de ejecución enfocada (Heatwave 🔥), compruebo que los bucles de comportamiento correctos generan cambios a largo plazo. Sin atajos, solo crecimiento compuesto.\n\n¿Qué estás ejecutando hoy? 💡\nOptimiza tu vida offline de manera privada y sin anuncios: $url"
+        AppLanguage.HINDI -> "निरंतरता ही सबसे बड़ी ताकत है। आज मैंने HabitEngine की मदद से अपने चारों प्रमुख जीवन स्तंभों (स्वास्थ्य, पेशेवर, व्यक्तिगत और परिवार) में संतुलन बनाते हुए $percentage% काम पूरा किया।\n\nलगातार $nonZeroStreak दिनों के फोकस्ड काम (Heatwave 🔥) के साथ, मैं साबित कर रहा हूँ कि सही हैबिट लूप दीर्घकालिक परिणाम देते हैं। कोई शार्टकट नहीं, सिर्फ रोज़ाना की प्रगति।\n\nआप आज क्या शुरू कर रहे हैं? 💡\nअपने जीवन को पूरी तरह ऑफलाइन और विज्ञापन-मुक्त सुरक्षित रूप से संतुलित करें: $url"
+        AppLanguage.GERMAN -> "Beständigkeit ist der ultimative Wettbewerbsvorteil. Heute habe ich $percentage% meiner Gewohnheitsroutinen mit HabitEngine erreicht und meine Fortschritte in den vier entscheidenden Lebensquadranten verfolgt: Gesundheit, Beruf, Persönlich und Familie.\n\nMit $nonZeroStreak aufeinanderfolgenden Tagen fokussierter Ausführung (Heatwave 🔥) beweise ich, dass ehrliche Verhaltensschleifen langfristige Systeme aufbauen. Kein schneller Hack, nur Zinseszins-Wachstum.\n\nWas setzt du heute um? 💡\nBringe Struktur in deinen Tag – offline, sicher und werbefrei: $url"
+        AppLanguage.JAPANESE -> "「継続」こそが、人生における究極の競争優位性です。今日、HabitEngineのルーティンワークスペースを活用して、健康、仕事、個人、家族という「人生の4つの重要な柱」のタスクを $percentage% クリアしました。\n\n$nonZeroStreak 日間連続でフォーカス（Heatwave 🔥）を実行したことで、正しい行動ループが長期的な習慣システムを構築することを証明しています。奇をてらわず、毎日の複利の力を信じるインクリメンタルな成長。\n\nあなたは今日、何を実行しますか？ 💡\nオフライン＆プライベートで、気を散らさずに最高の1日を設計しましょう: $url"
+        AppLanguage.PORTUGUESE -> "A consistência é o maior diferencial competitivo de todos. Hoje concluí $percentage% das minhas rotinas no HabitEngine, monitorando meu progresso nos quatro quadrantes cruciais do viver: Saúde, Carreira, Mente e Família.\n\nCom $nonZeroStreak dias consecutivos de foco ativo (Heatwave 🔥), provo que bons loops comportamentais geram resultados de longo prazo de verdade. Sem milagres, apenas crescimento acumulado.\n\nO que você vai executar hoje? 💡\nOtimize o seu dia totalmente offline, seguro e livre de anúncios: $url"
+        else -> "Consistency is the ultimate competitive advantage. Today I managed to hit $percentage% on my habit routine workspace with HabitEngine, tracking my progress across the four crucial life quadrants: Health, Professional, Personal, and Family. \n\nWith $nonZeroStreak consecutive days of focused execution (Heatwave 🔥), I am proving that standard behavior loops build long-term systems. No quick hacks, just compound growth.\n\nWhat are you executing today? 💡\nOptimize your day offline, secure, and ad-free: $url"
     }
 }
 
@@ -4508,7 +4508,7 @@ fun ShareProgressDialog(
         }
     }
     
-    val appUrl = "https://aurabyte.app"
+    val appUrl = "https://HabitEngine.app"
     
     val instagramTemplate = remember(percentage, streak, selectedLanguage) {
         getInstagramTemplate(percentage, streak, appUrl, selectedLanguage)
@@ -4536,7 +4536,7 @@ fun ShareProgressDialog(
                     " $statusBox ${habit.domain.displayName}: ${habit.routineText} (${habit.cadence.displayName})"
                 }
             """
-🏆 AURA BYTE - Daily Success Summary 🏆
+🏆 Habit Engine - Daily Success Summary 🏆
 📅 Date: $formatDay
 📊 Progress: $completedCount / $totalHabits ($percentage%)
 🔥 Heatwave Streak: $streak Days
@@ -4544,7 +4544,7 @@ fun ShareProgressDialog(
 $checkListText
 --------------------------------------------
 Consistently developed by Gemini and Ankit ♥️
-🚀 Download AuraByte: $appUrl
+🚀 Download HabitEngine: $appUrl
             """.trimIndent()
         }
     }
@@ -4594,7 +4594,7 @@ Consistently developed by Gemini and Ankit ♥️
                     }
                     Icon(
                         imageVector = Icons.Default.Star,
-                        contentDescription = "AuraByte Star Logo",
+                        contentDescription = "HabitEngine Star Logo",
                         modifier = Modifier.size(32.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -4804,7 +4804,7 @@ Consistently developed by Gemini and Ankit ♥️
                 ) {
                     OutlinedButton(
                         onClick = {
-                            val clip = ClipData.newPlainText("AuraByte Progress", activeTemplateText)
+                            val clip = ClipData.newPlainText("HabitEngine Progress", activeTemplateText)
                             clipboardManager.setPrimaryClip(clip)
                             Toast.makeText(
                                 context,
@@ -4924,7 +4924,7 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
         AppLanguage.SPANISH -> listOf(
             FaqItem(
                 "¿Cuál es la ciencia detrás de esta app?", 
-                "AuraByte se basa en un truco psicológico simple: el bucle de hábitos de Señal ➔ Rutina ➔ Recompensa. En lugar de proponerte metas vagas como 'cocinar más', vinculas un disparador ('Cuando entre a la cocina a las 7 PM') con una acción diminuta ('Cortaré una verdura') seguido de un premio inmediato. Así reconfiguras tu cerebro usando el camino de menor resistencia.", 
+                "HabitEngine se basa en un truco psicológico simple: el bucle de hábitos de Señal ➔ Rutina ➔ Recompensa. En lugar de proponerte metas vagas como 'cocinar más', vinculas un disparador ('Cuando entre a la cocina a las 7 PM') con una acción diminuta ('Cortaré una verdura') seguido de un premio inmediato. Así reconfiguras tu cerebro usando el camino de menor resistencia.", 
                 "💡", 
                 Color(0xFF1565C0)
             ),
@@ -4936,19 +4936,19 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
             ),
             FaqItem(
                 "¿Por qué dividir mi vida en 4 cuadrantes?", 
-                "Porque darlo todo en el trabajo no sirve de nada si tu salud o tus relaciones se están cayendo a pedazos. AuraByte te obliga a registrar tu progreso diario en cuatro pilares básicos: Salud, Profesional, Personal y Familia. Es un golpe de realidad diseñado para mantenerte enfocado y en equilibrio.", 
+                "Porque darlo todo en el trabajo no sirve de nada si tu salud o tus relaciones se están cayendo a pedazos. HabitEngine te obliga a registrar tu progreso diario en cuatro pilares básicos: Salud, Profesional, Personal y Familia. Es un golpe de realidad diseñado para mantenerte enfocado y en equilibrio.", 
                 "⚖️", 
                 Color(0xFFE91E63)
             ),
             FaqItem(
                 "¿Quién construyó esto? (La historia de Ankit)", 
-                "Hola, soy Ankit. Pasé años buscando un rastreador de hábitos en modo oscuro que fuera limpio, sin anuncios, privado y basado en psicología real. Todo lo que encontraba estaba lleno de funciones inútiles o bloqueado tras una suscripción. Así que me alié con Gemini y construí AuraByte yo mismo. Un espacio de trabajo offline y sin distracciones, hecho con ♥️ para desarrolladores que quieren pasar a la acción.", 
+                "Hola, soy Ankit. Pasé años buscando un rastreador de hábitos en modo oscuro que fuera limpio, sin anuncios, privado y basado en psicología real. Todo lo que encontraba estaba lleno de funciones inútiles o bloqueado tras una suscripción. Así que me alié con Gemini y construí HabitEngine yo mismo. Un espacio de trabajo offline y sin distracciones, hecho con ♥️ para desarrolladores que quieren pasar a la acción.", 
                 "👨‍💻", 
                 Color(0xFF2E7D32)
             ),
             FaqItem(
-                "¿Por qué se llama AuraByte?", 
-                "El nombre es una fusión de la cultura de internet moderna y las ciencias de la computación. Tu 'Aura' es tu vibra, tu energía y tu estado de ejecución personal. Un 'Byte' es la unidad fundamental de datos digitales. AuraByte significa que ya no estás dejando tu crecimiento personal al azar; estás cuantificando tu energía, hábitos y disciplina del mundo real en bytes de datos limpios e inmutables.", 
+                "¿Por qué se llama HabitEngine?", 
+                "El nombre es una fusión de la cultura de internet moderna y las ciencias de la computación. Tu 'Habit' es tu vibra, tu energía y tu estado de ejecución personal. Un 'Engine' es la unidad fundamental de datos digitales. HabitEngine significa que ya no estás dejando tu crecimiento personal al azar; estás cuantificando tu energía, hábitos y disciplina del mundo real en Engine de datos limpios e inmutables.", 
                 "⚡", 
                 Color(0xFF7E57C2)
             )
@@ -4956,7 +4956,7 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
         AppLanguage.HINDI -> listOf(
             FaqItem(
                 "इस ऐप के पीछे की साइंस क्या है?", 
-                "AuraByte एक आसान साइकोलॉजिकल ट्रिक पर काम करता है: संकेत ➔ आदत ➔ पुरस्कार (Habit Loop)। 'ज़्यादा कोडिंग करना' जैसे ढीले वादे करने के बजाय, आप एक निश्चित ट्रिगर तय करते हैं (जैसे 'जब मैं सुबह 9 बजे डेस्क पर बैठूँगा') और उसके साथ एक छोटा सा काम जोड़ते हैं ('1 DSA सवाल सॉल्व करूँगा')। इसके तुरंत बाद मिलने वाला रिवॉर्ड आपके दिमाग को इस रूटीन का आदी बना देता है।", 
+                "HabitEngine एक आसान साइकोलॉजिकल ट्रिक पर काम करता है: संकेत ➔ आदत ➔ पुरस्कार (Habit Loop)। 'ज़्यादा कोडिंग करना' जैसे ढीले वादे करने के बजाय, आप एक निश्चित ट्रिगर तय करते हैं (जैसे 'जब मैं सुबह 9 बजे डेस्क पर बैठूँगा') और उसके साथ एक छोटा सा काम जोड़ते हैं ('1 DSA सवाल सॉल्व करूँगा')। इसके तुरंत बाद मिलने वाला रिवॉर्ड आपके दिमाग को इस रूटीन का आदी बना देता है।", 
                 "💡", 
                 Color(0xFF1565C0)
             ),
@@ -4968,19 +4968,19 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
             ),
             FaqItem(
                 "अपने जीवन को ४ क्षेत्रों में बांटना क्यों ज़रूरी है?", 
-                "क्योंकि करियर में आगे बढ़ने का कोई मतलब नहीं रह जाता अगर आपका स्वास्थ्य या आपके रिश्ते बिगड़ने लगें। AuraByte आपको रोज़ाना ४ ज़रूरी पिलर्स पर नज़र रखने के लिए प्रेरित करता है: स्वास्थ्य, पेशेवर, व्यक्तिगत, और परिवार। यह डैशबोर्ड आपको आईना दिखाता है ताकि आपका जीवन हर तरफ से संतुलित रहे।", 
+                "क्योंकि करियर में आगे बढ़ने का कोई मतलब नहीं रह जाता अगर आपका स्वास्थ्य या आपके रिश्ते बिगड़ने लगें। HabitEngine आपको रोज़ाना ४ ज़रूरी पिलर्स पर नज़र रखने के लिए प्रेरित करता है: स्वास्थ्य, पेशेवर, व्यक्तिगत, और परिवार। यह डैशबोर्ड आपको आईना दिखाता है ताकि आपका जीवन हर तरफ से संतुलित रहे।", 
                 "⚖️", 
                 Color(0xFFE91E63)
             ),
             FaqItem(
                 "इसे किसने बनाया? (अंकित की कहानी)", 
-                "हे, मैं हूँ अंकित। मैं लंबे समय से एक ऐसा आदत ट्रैक करने वाला ऐप ढूंढ रहा था जो सुंदर हो, डार्क मोड में हो, विज्ञापन-मुक्त हो और पूरी तरह से प्राइवेट हो। बाज़ार में मौजूद ज़्यादातर ऐप्स या तो बहुत जटिल थे या पैसों के पीछे भाग रहे थे। इसलिए, मैंने Gemini के साथ मिलकर खुद का AuraByte बनाया। बिना किसी बकवास और बिना इंटरनेट के चलने वाला एक साफ-सुथरा वर्कस्पेस—उन डेवलपर्स के लिए जो असल में लाइफ में बदलाव देखना चाहते हैं। ♥️ के साथ निर्मित!", 
+                "हे, मैं हूँ अंकित। मैं लंबे समय से एक ऐसा आदत ट्रैक करने वाला ऐप ढूंढ रहा था जो सुंदर हो, डार्क मोड में हो, विज्ञापन-मुक्त हो और पूरी तरह से प्राइवेट हो। बाज़ार में मौजूद ज़्यादातर ऐप्स या तो बहुत जटिल थे या पैसों के पीछे भाग रहे थे। इसलिए, मैंने Gemini के साथ मिलकर खुद का HabitEngine बनाया। बिना किसी बकवास और बिना इंटरनेट के चलने वाला एक साफ-सुथरा वर्कस्पेस—उन डेवलपर्स के लिए जो असल में लाइफ में बदलाव देखना चाहते हैं। ♥️ के साथ निर्मित!", 
                 "👨‍💻", 
                 Color(0xFF2E7D32)
             ),
             FaqItem(
-                "इस ऐप का नाम AuraByte क्यों है?", 
-                "यह नाम मॉडर्न इंटरनेट कल्चर और कंप्यूटर साइंस का एक बेहतरीन फ्यूजन है। आपकी 'Aura' का मतलब है आपका वाइब, आपकी एनर्जी और आपके काम करने का तरीका। और एक 'Byte' डिजिटल डेटा की सबसे बुनियादी इकाई (unit) है। AuraByte का सीधा सा मतलब है कि आप अपनी पर्सनल ग्रोथ को किस्मत के भरोसे नहीं छोड़ रहे हैं; आप अपनी असली दुनिया की ऊर्जा, आदतों और अनुशासन को साफ और पक्के डेटा बाइट्स में बदल रहे हैं।", 
+                "इस ऐप का नाम HabitEngine क्यों है?", 
+                "यह नाम मॉडर्न इंटरनेट कल्चर और कंप्यूटर साइंस का एक बेहतरीन फ्यूजन है। आपकी 'Habit' का मतलब है आपका वाइब, आपकी एनर्जी और आपके काम करने का तरीका। और एक 'Engine' डिजिटल डेटा की सबसे बुनियादी इकाई (unit) है। HabitEngine का सीधा सा मतलब है कि आप अपनी पर्सनल ग्रोथ को किस्मत के भरोसे नहीं छोड़ रहे हैं; आप अपनी असली दुनिया की ऊर्जा, आदतों और अनुशासन को साफ और पक्के डेटा बाइट्स में बदल रहे हैं।", 
                 "⚡", 
                 Color(0xFF7E57C2)
             )
@@ -4988,7 +4988,7 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
         AppLanguage.GERMAN -> listOf(
             FaqItem(
                 "Welche Wissenschaft steckt hinter dieser App?", 
-                "AuraByte basiert auf einem einfachen psychologischen Trick: der Gewohnheitsschleife aus Auslöser ➔ Routine ➔ Belohnung. Statt vager Ziele wie 'mehr Sport' verknüpfst du einen klaren Auslöser ('Wenn ich um 7 Uhr meine Laufschuhe sehe') mit einer winzigen Aktion ('Ich gehe 5 Minuten raus') und belohnst dich sofort danach. So programmierst du dein Gehirn um.", 
+                "HabitEngine basiert auf einem einfachen psychologischen Trick: der Gewohnheitsschleife aus Auslöser ➔ Routine ➔ Belohnung. Statt vager Ziele wie 'mehr Sport' verknüpfst du einen klaren Auslöser ('Wenn ich um 7 Uhr meine Laufschuhe sehe') mit einer winzigen Aktion ('Ich gehe 5 Minuten raus') und belohnst dich sofort danach. So programmierst du dein Gehirn um.", 
                 "💡", 
                 Color(0xFF1565C0)
             ),
@@ -5000,19 +5000,19 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
             ),
             FaqItem(
                 "Warum sollte ich mein Leben in 4 Quadranten aufteilen?", 
-                "Weil Erfolg im Job wertlos ist, wenn deine Gesundheit oder deine Beziehungen vor dem Aus stehen. AuraByte zwingt dich dazu, deinen Alltag in vier essenziellen Bereichen zu tracken: Gesundheit, Beruf, Persönliches und Familie. Ein Realitätscheck, der dich im Gleichgewicht hält.", 
+                "Weil Erfolg im Job wertlos ist, wenn deine Gesundheit oder deine Beziehungen vor dem Aus stehen. HabitEngine zwingt dich dazu, deinen Alltag in vier essenziellen Bereichen zu tracken: Gesundheit, Beruf, Persönliches und Familie. Ein Realitätscheck, der dich im Gleichgewicht hält.", 
                 "⚖️", 
                 Color(0xFFE91E63)
             ),
             FaqItem(
                 "Wer hat die App gebaut? (Ankits Story)", 
-                "Hi, ich bin Ankit. Ich habe ewig nach einem sauberen Dark-Mode-Gewohnheitstracker gesucht, der werbefrei, absolut privat und psychologisch fundiert ist. Alles auf dem Markt war entweder überladen oder hinter einer Paywall versteckt. Also habe ich mich mit Gemini zusammengetan und AuraByte einfach selbst gebaut. Ein komplett offline funktionierender, ablenkungsfreier Workspace—mit ♥️ gebaut für Entwickler, die einfach machen wollen.", 
+                "Hi, ich bin Ankit. Ich habe ewig nach einem sauberen Dark-Mode-Gewohnheitstracker gesucht, der werbefrei, absolut privat und psychologisch fundiert ist. Alles auf dem Markt war entweder überladen oder hinter einer Paywall versteckt. Also habe ich mich mit Gemini zusammengetan und HabitEngine einfach selbst gebaut. Ein komplett offline funktionierender, ablenkungsfreier Workspace—mit ♥️ gebaut für Entwickler, die einfach machen wollen.", 
                 "👨‍💻", 
                 Color(0xFF2E7D32)
             ),
             FaqItem(
-                "Warum heißt die App AuraByte?", 
-                "Der Name ist eine Verschmelzung aus moderner Internetkultur und Kerninformatik. Deine 'Aura' steht für deinen Vibe, deine Energie und deinen persönlichen Fokus. Ein 'Byte' ist die grundlegende Einheit digitaler Daten. AuraByte bedeutet, dass du dein persönliches Wachstum nicht mehr dem Zufall überlässt: Du quantifizierst deine reale Energie, deine Gewohnheiten und deine Disziplin in saubere, unveränderliche Daten-Bytes.", 
+                "Warum heißt die App HabitEngine?", 
+                "Der Name ist eine Verschmelzung aus moderner Internetkultur und Kerninformatik. Deine 'Habit' steht für deinen Vibe, deine Energie und deinen persönlichen Fokus. Ein 'Engine' ist die grundlegende Einheit digitaler Daten. HabitEngine bedeutet, dass du dein persönliches Wachstum nicht mehr dem Zufall überlässt: Du quantifizierst deine reale Energie, deine Gewohnheiten und deine Disziplin in saubere, unveränderliche Daten-Engine.", 
                 "⚡", 
                 Color(0xFF7E57C2)
             )
@@ -5020,7 +5020,7 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
         AppLanguage.JAPANESE -> listOf(
             FaqItem(
                 "このアプリの仕組みは？", 
-                "AuraByteはシンプルな心理学のハック、つまり「きっかけ ➔ 行動 ➔ ごほうび」の習慣ループに基づいています。「もっと勉強する」といった曖昧な目標を立てる代わりに、「デスクに座ったら」という明確なきっかけと「DSAを1問解く」という小さな行動を結びつけ、すぐにごほうびを与えます。これが脳の配線を変える一番の近道です。", 
+                "HabitEngineはシンプルな心理学のハック、つまり「きっかけ ➔ 行動 ➔ ごほうび」の習慣ループに基づいています。「もっと勉強する」といった曖昧な目標を立てる代わりに、「デスクに座ったら」という明確なきっかけと「DSAを1問解く」という小さな行動を結びつけ、すぐにごほうびを与えます。これが脳の配線を変える一番の近道です。", 
                 "💡", 
                 Color(0xFF1565C0)
             ),
@@ -5032,19 +5032,19 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
             ),
             FaqItem(
                 "なぜ人生を4つのエリアに分けるのですか？", 
-                "仕事でどれだけ結果を出しても、体調を崩したり、大切な人との関係が壊れてしまっては意味がないからです。AuraByteは「健康」「仕事」「個人」「家族」という4つの柱で日々の行動を管理します。これは、自分が今どこに偏っているのかを突きつける、人生のリアルタイムなバランス調整ツールです。", 
+                "仕事でどれだけ結果を出しても、体調を崩したり、大切な人との関係が壊れてしまっては意味がないからです。HabitEngineは「健康」「仕事」「個人」「家族」という4つの柱で日々の行動を管理します。これは、自分が今どこに偏っているのかを突きつける、人生のリアルタイムなバランス調整ツールです。", 
                 "⚖️", 
                 Color(0xFFE91E63)
             ),
             FaqItem(
                 "開発者はどんな人？（Ankitのストーリー）", 
-                "こんにちは、Ankitです。心理学に基づいた、広告が一切ないクリーンなダークモードの習慣トラッカーをずっと探していました。しかし、世の中にあるツールは機能が多すぎて使いづらいか、サブスク課金ばかり。それなら自分で作ろうと思い、Geminiとタッグを組んで開発したのがAuraByteです。完全にオフラインで集中できる、目標を実行に移したい開発者のためのワークスペースを、愛を込めてお届けします ♥️", 
+                "こんにちは、Ankitです。心理学に基づいた、広告が一切ないクリーンなダークモードの習慣トラッカーをずっと探していました。しかし、世の中にあるツールは機能が多すぎて使いづらいか、サブスク課金ばかり。それなら自分で作ろうと思い、Geminiとタッグを組んで開発したのがHabitEngineです。完全にオフラインで集中できる、目標を実行に移したい開発者のためのワークスペースを、愛を込めてお届けします ♥️", 
                 "👨‍💻", 
                 Color(0xFF2E7D32)
             ),
             FaqItem(
-                "なぜAuraByte（オーラバイト）という名前なのですか？", 
-                "この名前は、現代のインターネットカルチャーとコンピュータサイエンスの核心を融合させたものです。「Aura（オーラ）」はあなたのバイブス、エネルギー、そして日々の実行力を表します。そして「Byte（バイト）」はデジタルデータの基本単位です。AuraByteという名前には、個人の成長をあいまいにせず、現実世界でのエネルギー、習慣、そして規律を、クリーンで不変なデジタルデータとして数値化していくという意味が込められています。", 
+                "なぜHabitEngine（オーラバイト）という名前なのですか？", 
+                "この名前は、現代のインターネットカルチャーとコンピュータサイエンスの核心を融合させたものです。「Habit（オーラ）」はあなたのバイブス、エネルギー、そして日々の実行力を表します。そして「Engine（バイト）」はデジタルデータの基本単位です。HabitEngineという名前には、個人の成長をあいまいにせず、現実世界でのエネルギー、習慣、そして規律を、クリーンで不変なデジタルデータとして数値化していくという意味が込められています。", 
                 "⚡", 
                 Color(0xFF7E57C2)
             )
@@ -5052,7 +5052,7 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
         AppLanguage.PORTUGUESE -> listOf(
             FaqItem(
                 "Qual é a ciência por trás deste app?", 
-                "O AuraByte funciona com base em um truque psicológico simples: o loop de Gatilho ➔ Ação ➔ Recompensa. Em vez de criar metas vagas como 'estudar mais', você conecta um gatilho específico ('Quando eu sentar na mesa às 8h') a uma microação ('Vou resolver 1 problema de algoritmo') e se dá uma recompensa imediata. É assim que você reconfigura o seu cérebro pelo caminho de menor resistência.", 
+                "O HabitEngine funciona com base em um truque psicológico simples: o loop de Gatilho ➔ Ação ➔ Recompensa. Em vez de criar metas vagas como 'estudar mais', você conecta um gatilho específico ('Quando eu sentar na mesa às 8h') a uma microação ('Vou resolver 1 problema de algoritmo') e se dá uma recompensa imediata. É assim que você reconfigura o seu cérebro pelo caminho de menor resistência.", 
                 "💡", 
                 Color(0xFF1565C0)
             ),
@@ -5064,19 +5064,19 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
             ),
             FaqItem(
                 "Por que dividir minha vida em 4 quadrantes?", 
-                "Porque não adianta nada evoluir na carreira se a sua saúde ou os seus relacionamentos estiverem desmoronando. O AuraByte te força a acompanhar o progresso diário em quatro pilares fundamentais: Saúde, Profissional, Pessoal e Família. É um choque de realidade para te manter equilibrado e focado no que importa.", 
+                "Porque não adianta nada evoluir na carreira se a sua saúde ou os seus relacionamentos estiverem desmoronando. O HabitEngine te força a acompanhar o progresso diário em quatro pilares fundamentais: Saúde, Profissional, Pessoal e Família. É um choque de realidade para te manter equilibrado e focado no que importa.", 
                 "⚖️", 
                 Color(0xFFE91E63)
             ),
             FaqItem(
                 "Quem desenvolveu o app? (História do Ankit)", 
-                "Fala aí, eu sou o Ankit. Passei anos procurando um rastreador de hábitos em modo escuro que fosse limpo, sem anúncios, totalmente privado e baseado em psicologia comportamental de verdade. Tudo no mercado era poluído ou cobrava assinatura. Então, juntei forças com o Gemini e montei o AuraByte. Um espaço de trabalho offline e sem distrações—feito com muito ♥️ para desenvolvedores que querem parar de planejar e começar a executar.", 
+                "Fala aí, eu sou o Ankit. Passei anos procurando um rastreador de hábitos em modo escuro que fosse limpo, sem anúncios, totalmente privado e baseado em psicologia comportamental de verdade. Tudo no mercado era poluído ou cobrava assinatura. Então, juntei forças com o Gemini e montei o HabitEngine. Um espaço de trabalho offline e sem distrações—feito com muito ♥️ para desenvolvedores que querem parar de planejar e começar a executar.", 
                 "👨‍💻", 
                 Color(0xFF2E7D32)
             ),
             FaqItem(
-                "Por que se chama AuraByte?", 
-                "O nome é uma fusão da cultura moderna da internet com os fundamentos da ciência da computação. Sua 'Aura' é a sua vibração, sua energia e seu estado de execução pessoal. Um 'Byte' é a unidade fundamental de dados digitais. AuraByte significa que você não está mais deixando seu crescimento pessoal ao acaso; você está quantificando sua energia, hábitos e disciplina do mundo real em bytes de dados limpos e imutáveis.", 
+                "Por que se chama HabitEngine?", 
+                "O nome é uma fusão da cultura moderna da internet com os fundamentos da ciência da computação. Sua 'Habit' é a sua vibração, sua energia e seu estado de execução pessoal. Um 'Engine' é a unidade fundamental de dados digitais. HabitEngine significa que você não está mais deixando seu crescimento pessoal ao acaso; você está quantificando sua energia, hábitos e disciplina do mundo real em Engine de dados limpos e imutáveis.", 
                 "⚡", 
                 Color(0xFF7E57C2)
             )
@@ -5084,7 +5084,7 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
         else -> listOf(
             FaqItem(
                 "What's the science behind this app?", 
-                "AuraByte is built on a simple psychological hack: the Cue ➔ Action ➔ Reward loop. Instead of setting vague resolutions like 'code more,' you anchor a concrete trigger ('When I sit down at my desk with coffee') to a tiny micro-action ('I will solve 1 DSA problem') followed by an instant reward. It rewires your brain using the path of least resistance.", 
+                "HabitEngine is built on a simple psychological hack: the Cue ➔ Action ➔ Reward loop. Instead of setting vague resolutions like 'code more,' you anchor a concrete trigger ('When I sit down at my desk with coffee') to a tiny micro-action ('I will solve 1 DSA problem') followed by an instant reward. It rewires your brain using the path of least resistance.", 
                 "💡", 
                 Color(0xFF1565C0)
             ),
@@ -5096,19 +5096,19 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
             ),
             FaqItem(
                 "Why divide my life into 4 quadrants?", 
-                "Because crushing your career milestones doesn't mean anything if your physical health or your relationships are actively falling apart. AuraByte holds you accountable across four baseline dimensions: Health, Professional, Personal, and Family. It's a daily reality check to make sure you stay balanced and consistent.", 
+                "Because crushing your career milestones doesn't mean anything if your physical health or your relationships are actively falling apart. HabitEngine holds you accountable across four baseline dimensions: Health, Professional, Personal, and Family. It's a daily reality check to make sure you stay balanced and consistent.", 
                 "⚖️", 
                 Color(0xFFE91E63)
             ),
             FaqItem(
                 "Who built this? (Ankit's Story)", 
-                "Hey, I'm Ankit. I spent years looking for a crisp, minimal dark-mode habit loop tracker that was completely ad-free, secure, and based on actual behavioral psychology. Everything out there was either absolute bloatware or locked behind a monthly subscription. So, I partnered up with Gemini and built AuraByte myself. A fully offline, distraction-free workspace—handcrafted with ♥️ for devs who just want to execute.", 
+                "Hey, I'm Ankit. I spent years looking for a crisp, minimal dark-mode habit loop tracker that was completely ad-free, secure, and based on actual behavioral psychology. Everything out there was either absolute bloatware or locked behind a monthly subscription. So, I partnered up with Gemini and built HabitEngine myself. A fully offline, distraction-free workspace—handcrafted with ♥️ for devs who just want to execute.", 
                 "👨‍💻", 
                 Color(0xFF2E7D32)
             ),
             FaqItem(
-                "Why is it called AuraByte?", 
-                "The name is a fusion of modern internet culture and core computer science. Your 'Aura' is your ultimate vibe, your energy, and your personal execution state. A 'Byte' is the fundamental unit of digital data. AuraByte means you are no longer leaving your personal growth to chance; you are quantifying your real-world energy, habits, and discipline into clean, immutable data bytes.", 
+                "Why is it called HabitEngine?", 
+                "The name is a fusion of modern internet culture and core computer science. Your 'Habit' is your ultimate vibe, your energy, and your personal execution state. A 'Engine' is the fundamental unit of digital data. HabitEngine means you are no longer leaving your personal growth to chance; you are quantifying your real-world energy, habits, and discipline into clean, immutable data Engine.", 
                 "⚡", 
                 Color(0xFF7E57C2)
             )
@@ -5127,7 +5127,7 @@ private fun getLifeAreaDoc(language: AppLanguage): LifeAreaDoc {
                 Triple("3. Personal (Mente y sabiduría)", "Lectura, pasatiempos, meditación y autorreflexión (como monitorear y controlar tus problemas de ira). Esto nutre tu mundo interno y mantiene tu mente ágil, fría y bajo control.", Color(0xFFE91E63)),
                 Triple("4. Familia (Conexión real)", "Tu red de seguridad emocional. El tiempo intencional y de alta calidad que dedicas a tus padres, pareja, hijos o amigos cercanos. Es lo que le da sentido a todo el esfuerzo.", Color(0xFFEF6C00))
             ),
-            conclusion = "Al balancear tus 'bytes' en estos bloques, evitas que tu crecimiento sea desigual. Tu Command Dashboard te recordará de forma visual si estás dejando algún cilindro vacío."
+            conclusion = "Al balancear tus 'Engine' en estos bloques, evitas que tu crecimiento sea desigual. Tu Command Dashboard te recordará de forma visual si estás dejando algún cilindro vacío."
         )
         AppLanguage.HINDI -> LifeAreaDoc(
             title = "४ लाइफ क्वाड्रंट्स का दर्शन",
@@ -5171,7 +5171,7 @@ private fun getLifeAreaDoc(language: AppLanguage): LifeAreaDoc {
                 Triple("3. Pessoal (Mente livre e autoconhecimento)", "Leitura, hobbies, meditação e autocontrole (como monitorar e mitigar problemas de temperamento ou raiva). Mantém a sua mente afiada, fria e sob comando.", Color(0xFFE91E63)),
                 Triple("4. Família (Conexão e presença)", "Sua rede de apoio emocional. O tempo intencional e sem distrações digitais dedicado a quem você ama—seus pais, parceiro(a), filhos ou amigos reais. É o que dá sentido à jornada.", Color(0xFFEF6C00))
             ),
-            conclusion = "Dividir seus 'bytes' por essas frentes evita que sua vida cresça torta. O painel interativo te mostra em tempo real como está a saúde de cada engrenagem vital."
+            conclusion = "Dividir seus 'Engine' por essas frentes evita que sua vida cresça torta. O painel interativo te mostra em tempo real como está a saúde de cada engrenagem vital."
         )
         else -> LifeAreaDoc(
             title = "The Philosophy of the 4 Quadrants",
