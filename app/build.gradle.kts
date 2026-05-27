@@ -58,6 +58,33 @@ android {
   testOptions { unitTests { isIncludeAndroidResources = true } }
 }
 
+tasks.register<Copy>("copyDebugApk") {
+  val buildDir = layout.buildDirectory
+  from(buildDir.map { it.dir("outputs/apk/debug") }) {
+    include("app-debug.apk")
+    rename { "HabitEngine_1.1.0.apk" }
+  }
+  into(buildDir.map { it.dir("outputs/HabitEngineApk") })
+}
+
+tasks.register<Copy>("copyReleaseApk") {
+  val buildDir = layout.buildDirectory
+  from(buildDir.map { it.dir("outputs/apk/release") }) {
+    include("app-release.apk")
+    rename { "HabitEngine_1.1.0.apk" }
+  }
+  into(buildDir.map { it.dir("outputs/HabitEngineApk") })
+}
+
+tasks.all {
+  if (name == "assembleDebug") {
+    finalizedBy("copyDebugApk")
+  }
+  if (name == "assembleRelease") {
+    finalizedBy("copyReleaseApk")
+  }
+}
+
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
 // to match the convention used in Web projects.
 secrets {

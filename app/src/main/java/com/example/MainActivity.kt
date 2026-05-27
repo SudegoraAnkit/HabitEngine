@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
         val database = Room.databaseBuilder(
             applicationContext,
             AppDatabase::class.java,
-            "aurabyte_habits_ledger.db"
+            "habitengine_habits_ledger.db"
         )
         .fallbackToDestructiveMigration() // safe sandbox environment migrations fallback
         .build()
