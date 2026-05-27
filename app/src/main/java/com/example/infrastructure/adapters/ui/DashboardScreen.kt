@@ -4985,6 +4985,12 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
                 "El nombre es una fusión de la cultura de internet moderna y las ciencias de la computación. Tu 'Habit' es tu vibra, tu energía y tu estado de ejecución personal. Un 'Engine' es la unidad fundamental de datos digitales. HabitEngine significa que ya no estás dejando tu crecimiento personal al azar; estás cuantificando tu energía, hábitos y disciplina del mundo real en un motor de datos limpios e inmutables.", 
                 "⚡", 
                 Color(0xFF7E57C2)
+            ),
+            FaqItem(
+                "¿Dónde se guardan mis datos? (Privacidad)", 
+                "HabitEngine es 100% offline. No recopilamos, almacenamos, transmitimos ni compartimos ninguna de tus informaciones personales, hábitos o registros de actividad. Todo permanece de forma local en tu dispositivo. Tienes control total para exportar o eliminar tus copias de seguridad en cualquier momento.", 
+                "🛡️", 
+                Color(0xFF009688)
             )
         )
         AppLanguage.HINDI -> listOf(
@@ -5023,6 +5029,12 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
                 "यह नाम मॉडर्न इंटरनेट कल्चर और कंप्यूटर साइंस का एक बेहतरीन फ्यूजन है। आपकी 'Habit' का मतलब है आपका वाइब, आपकी एनर्जी और आपके काम करने का तरीका। और एक 'Engine' डिजिटल डेटा की सबसे बुनियादी इकाई (unit) है। HabitEngine का सीधा सा मतलब है कि आप अपनी पर्सनल ग्रोथ को किस्मत के भरोसे नहीं छोड़ रहे हैं; आप अपनी असली दुनिया की ऊर्जा, आदतों और अनुशासन को साफ और पक्के डेटा बाइट्स में बदल रहे हैं।", 
                 "⚡", 
                 Color(0xFF7E57C2)
+            ),
+            FaqItem(
+                "मेरा डेटा कहाँ सुरक्षित रहता है? (गोपनीयता नीति)", 
+                "HabitEngine 100% ऑफलाइन है। हम आपकी कोई भी व्यक्तिगत जानकारी, आदतें या लॉग एकत्र, संग्रहीत या साझा नहीं करते हैं। सारा डेटा आपके डिवाइस पर स्थानीय रूप से सुरक्षित रहता है। आपके पास किसी भी समय अपना बैकअप निर्यात करने या हटाने का पूरा नियंत्रण है।", 
+                "🛡️", 
+                Color(0xFF009688)
             )
         )
         AppLanguage.GERMAN -> listOf(
@@ -5061,6 +5073,12 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
                 "Der Name ist eine Verschmelzung aus moderner Internetkultur und Kerninformatik. Deine 'Habit' steht für deinen Vibe, deine Energie und deinen persönlichen Fokus. Ein 'Engine' ist die grundlegende Einheit digitaler Daten. HabitEngine bedeutet, dass du dein persönliches Wachstum nicht mehr dem Zufall überlässt: Du quantifizierst deine reale Energie, deine Gewohnheiten und deine Disziplin in saubere, unveränderliche Daten-Engine.", 
                 "⚡", 
                 Color(0xFF7E57C2)
+            ),
+            FaqItem(
+                "Wo werden meine Daten gespeichert? (Datenschutz)", 
+                "HabitEngine funktioniert zu 100% offline. Wir sammeln, speichern, übertragen oder teilen keine Ihrer persönlichen Daten, Gewohnheiten oder Protokolle. Alle Daten verbleiben lokal auf Ihrem Gerät. Sie haben jederzeit die volle Kontrolle über den Export oder das Löschen Ihrer Backups.", 
+                "🛡️", 
+                Color(0xFF009688)
             )
         )
         AppLanguage.JAPANESE -> listOf(
@@ -5099,6 +5117,12 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
                 "この名前は、現代のインターネットカルチャーとコンピュータサイエンスの核心を融合させたものです。「Habit」はあなたの習慣、バイブス、エネルギー、日々の実行力を表します。そして「Engine」は動力源となるエンジンです。HabitEngineという名前には、個人の成長をあいまいにせず、現実世界でのエネルギー、習慣、そして規律を、動力源（Engine）として推進していく不変なデジタルデータとして数値化していくという意味が込められています。", 
                 "⚡", 
                 Color(0xFF7E57C2)
+            ),
+            FaqItem(
+                "私のデータはどこに保存されますか？（プライバシー）", 
+                "HabitEngineは100%オフライン設計です。個人情報、習慣、アクティビティログを収集、保存、送信、共有することは一切ありません。すべてのデータはデバイス内にローカルに保存されます。いつでもデータのインポート・エクスポート・削除が可能です。", 
+                "🛡️", 
+                Color(0xFF009688)
             )
         )
         AppLanguage.PORTUGUESE -> listOf(
@@ -5137,6 +5161,12 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
                 "O nome é uma fusão da cultura moderna da internet com os fundamentos da ciência da computação. Sua 'Habit' é a sua vibração, sua energia e seu estado de execução pessoal. Um 'Engine' é a unidade fundamental de dados digitais. HabitEngine significa que você não está mais deixando seu crescimento pessoal ao acaso; você está quantificando sua energia, hábitos e disciplina do mundo real em um motor de dados limpos e imutáveis.", 
                 "⚡", 
                 Color(0xFF7E57C2)
+            ),
+            FaqItem(
+                "Onde meus dados são armazenados? (Privacidade)", 
+                "HabitEngine é 100% offline. Não coletamos, armazenamos, transmitimos ou compartilhamos nenhuma de suas informações pessoais, hábitos ou registros de atividades. Tudo permanece localmente no seu dispositivo. Você tem controle total para exportar ou excluir seus backups a qualquer momento.", 
+                "🛡️", 
+                Color(0xFF009688)
             )
         )
         else -> listOf(
@@ -5175,6 +5205,12 @@ private fun getFaqItems(language: AppLanguage): List<FaqItem> {
                 "The name is a fusion of modern internet culture and core computer science. Your 'Habit' is your ultimate vibe, your energy, and your personal execution state. A 'Engine' is the fundamental unit of digital data. HabitEngine means you are no longer leaving your personal growth to chance; you are quantifying your real-world energy, habits, and discipline into clean, immutable data Engine.", 
                 "⚡", 
                 Color(0xFF7E57C2)
+            ),
+            FaqItem(
+                "Where is my data stored? (Privacy Policy)", 
+                "HabitEngine is 100% offline-first. We do not collect, store, transmit, or share any of your personal information, habits, or activity logs. All data remains local on your device inside a secure Room database. You have full control to export or delete your backup at any time.", 
+                "🛡️", 
+                Color(0xFF009688)
             )
         )
     }
