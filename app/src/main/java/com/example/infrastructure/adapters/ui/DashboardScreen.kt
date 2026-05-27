@@ -934,6 +934,51 @@ fun DashboardScreen(
             }
         }
 
+        if (activeTab == DashboardTab.CREATE_HABIT) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp)
+            ) {
+                CreateHabitInlineScreen(
+                    selectedLanguage = selectedLanguage,
+                    onSubmit = { domain, cadence, cue, routine, reward, notes, isBad ->
+                        viewModel.createHabit(domain, cadence, cue, routine, reward, notes, isBad)
+                        activeTab = DashboardTab.DASHBOARD
+                    }
+                )
+            }
+        }
+
+        if (activeTab == DashboardTab.ACTIVITY_LOGGER) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(bottom = 80.dp)
+                ) {
+                    item {
+                        Box(modifier = Modifier.padding(16.dp)) {
+                            ActivityLoggerConsole(
+                                selectedLanguage = selectedLanguage,
+                                selectedDate = uiState.selectedDate,
+                                activityLogs = uiState.activityLogs,
+                                onCreateActivity = { desc, cat, duration ->
+                                    viewModel.createActivityLog(desc, cat, duration)
+                                },
+                                onDeleteActivity = { id ->
+                                    viewModel.deleteActivityLog(id)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // Beautiful Interactive Particle Overlay Canvas
         if (particles.isNotEmpty()) {
             Canvas(
@@ -1136,6 +1181,8 @@ fun DashboardScreen(
             )
         }
     }
+}
+}
 }
 
 // Custom Date Card Component for Cadence Sandbox
@@ -5147,3 +5194,278 @@ private fun getLifeAreaDoc(language: AppLanguage): LifeAreaDoc {
         )
     }
 }
+
+@Composable
+fun CreateHabitInlineScreen(
+    selectedLanguage: AppLanguage,
+    onSubmit: (domain: LifeDomain, cadence: Cadence, cueText: String, routineText: String, rewardText: String, notesText: String, isBad: Boolean) -> Unit
+) {
+    var domain by rememberSaveable { mutableStateOf(LifeDomain.HEALTH) }
+    var cadence by rememberSaveable { mutableStateOf(Cadence.DAILY) }
+    var notesText by rememberSaveable { mutableStateOf("") }
+    var isBad by rememberSaveable { mutableStateOf(false) }
+    
+    var cueText by rememberSaveable { mutableStateOf("") }
+    var routineText by rememberSaveable { mutableStateOf("") }
+    var rewardText by rememberSaveable { mutableStateOf("") }
+ 
+    var hasAttemptedSubmit by rememberSaveable { mutableStateOf(false) }
+    
+    val focusManager = LocalFocusManager.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .border(BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)), RoundedCornerShape(16.dp))
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(20.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "FORMULATE A NEW HABIT 🧠",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                fontFamily = FontFamily.Monospace,
+                letterSpacing = 1.sp
+            )
+            
+            Text(
+                text = "Configure your cue, routine, and reward triggers in alignment with the Charles Duhigg loop philosophy.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+
+            // Domain Selection
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = Localizations.get(selectedLanguage, "domain_title"),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    fontWeight = FontWeight.Bold
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    LifeDomain.values().forEach { d ->
+                        val isSelected = domain == d
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (isSelected) getDomainColor(d) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                                )
+                                .clickable { domain = d }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = d.displayName,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) Color.Black else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Cadence Selection
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = Localizations.get(selectedLanguage, "cadence_title"),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    fontWeight = FontWeight.Bold
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Cadence.values().forEach { c ->
+                        val isSelected = cadence == c
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (isSelected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                                )
+                                .clickable { cadence = c }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = c.displayName,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Habit Type Selection (Good vs Bad)
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = "Habit Type:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    fontWeight = FontWeight.Bold
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                if (!isBad) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                            )
+                            .border(
+                                if (!isBad) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else BorderStroke(0.dp, Color.Transparent),
+                                RoundedCornerShape(8.dp)
+                            )
+                            .clickable { isBad = false }
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "Routine (Good Habit) 🌸", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (!isBad) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                if (isBad) MaterialTheme.colorScheme.error.copy(alpha = 0.12f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                            )
+                            .border(
+                                if (isBad) BorderStroke(1.dp, MaterialTheme.colorScheme.error) else BorderStroke(0.dp, Color.Transparent),
+                                RoundedCornerShape(8.dp)
+                            )
+                            .clickable { isBad = true }
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "Avoidance (Bad Habit) 🛡️", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (isBad) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface)
+                    }
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+
+            // Duhigg Sentinel Loop Description
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.04f))
+                    .padding(12.dp)
+            ) {
+                Text(
+                    text = Localizations.get(selectedLanguage, "formula_sentence"),
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontFamily = FontFamily.Monospace,
+                    lineHeight = 15.sp
+                )
+            }
+
+            // Sentence Fields
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = cueText,
+                    onValueChange = { cueText = it },
+                    label = { Text(Localizations.get(selectedLanguage, "routine_label") + " (Optional)") },
+                    placeholder = { Text(Localizations.get(selectedLanguage, "routine_placeholder")) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+                )
+
+                OutlinedTextField(
+                    value = routineText,
+                    onValueChange = { routineText = it },
+                    label = { Text(Localizations.get(selectedLanguage, "action_label")) },
+                    placeholder = { Text(Localizations.get(selectedLanguage, "action_placeholder")) },
+                    isError = hasAttemptedSubmit && routineText.trim().isEmpty(),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+                )
+
+                OutlinedTextField(
+                    value = rewardText,
+                    onValueChange = { rewardText = it },
+                    label = { Text(Localizations.get(selectedLanguage, "reward_label") + " (Optional)") },
+                    placeholder = { Text(Localizations.get(selectedLanguage, "reward_placeholder")) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
+                )
+
+                OutlinedTextField(
+                    value = notesText,
+                    onValueChange = { notesText = it },
+                    label = { Text("Personal Notes / Avoidance Strategy") },
+                    placeholder = { Text("e.g. Keep water nearby, start with 2 mins...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+                )
+            }
+
+            if (hasAttemptedSubmit && routineText.isBlank()) {
+                Text(
+                    text = "The habit action/name cannot be blank.",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Button(
+                onClick = {
+                    hasAttemptedSubmit = true
+                    if (routineText.isNotBlank()) {
+                        focusManager.clearFocus()
+                        onSubmit(domain, cadence, cueText, routineText, rewardText, notesText, isBad)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "SAVE AND FORMULATE 🧠",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+        }
+    }
+}
+
